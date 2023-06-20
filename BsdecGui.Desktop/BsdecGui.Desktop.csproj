@@ -7,13 +7,18 @@
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>bsdec.ico</ApplicationIcon>
   </PropertyGroup>
+  <ItemGroup>
+    <Content Include="bsdec.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\BsdecCore\BsdecCore.csproj" />
     <ProjectReference Include="..\BsdecGui\BsdecGui.csproj" />
   </ItemGroup>
 </Project>

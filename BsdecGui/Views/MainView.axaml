@@ -3,14 +3,25 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:BsdecGui.ViewModels"
+			 xmlns:views="clr-namespace:BsdecGui.Views"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="BsdecGui.Views.MainView"
              x:DataType="vm:MainViewModel">
-  <Design.DataContext>
-    <!-- This only sets the DataContext for the previewer in an IDE,
+	<Design.DataContext>
+		<!-- This only sets the DataContext for the previewer in an IDE,
          to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-    <vm:MainViewModel />
-  </Design.DataContext>
+		<vm:MainViewModel />
+	</Design.DataContext>
 
-  <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+	<TabControl>
+		<TabItem Header="Schema generation" >
+			<views:SchemaGenView DataContext="{Binding SchemaGen}"/>
+		</TabItem>
+		<TabItem Header="Import/Export">
+			<TextBlock Text="This page will be for importing/exporting savefiles in various formats."/>
+		</TabItem>
+		<TabItem Header="Direct editing">
+			<TextBlock Text="This page will allow the user to carry out edits without an external program"/>
+		</TabItem>
+	</TabControl>
 </UserControl>

@@ -1,0 +1,30 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:BsdecGui.ViewModels"
+			 xmlns:views="clr-namespace:BsdecGui.Views"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+			 x:DataType="vm:SchemaGen"
+             x:Class="BsdecGui.Views.SchemaGenView">
+	<RelativePanel>
+		<Grid ColumnDefinitions="Auto,20,200" RowDefinitions="Auto,Auto,Auto" Margin="20 20 20 20">
+			<TextBlock Grid.Column="0" Grid.Row="0" Text="Top-level class name:" VerticalAlignment="Center"/>
+			<TextBox Grid.Column="2" Grid.Row="0"></TextBox>
+			<TextBlock Grid.Column="0" Grid.Row="1" Text="Write method name:" VerticalAlignment="Center"/>
+			<TextBox Grid.Column="2" Grid.Row="1"></TextBox>
+			<TextBlock Grid.Column="0" Grid.Row="2" Text="Read method name:" VerticalAlignment="Center"/>
+			<TextBox Grid.Column="2" Grid.Row="2"></TextBox>
+		</Grid>
+		<Grid ColumnDefinitions="Auto,20,*" RowDefinitions="Auto,Auto"
+				RelativePanel.AlignBottomWithPanel="True"
+				RelativePanel.AlignLeftWithPanel="True"
+				RelativePanel.AlignRightWithPanel="True"
+				Margin="20 20 20 20">
+			<TextBlock Grid.Column="0" Grid.Row="0" Text="Program filepath:" VerticalAlignment="Center"/>
+			<views:FilePicker Grid.Column="2" Grid.Row="0" DataContext="{Binding AssemblyFilePicker}"></views:FilePicker>
+			<TextBlock Grid.Column="0" Grid.Row="1" Text="Output filepath (optional):" VerticalAlignment="Center"/>
+			<views:FilePicker Grid.Column="2" Grid.Row="1" DataContext="{Binding OutputFilePicker}"></views:FilePicker>
+		</Grid>
+	</RelativePanel>
+</UserControl>
