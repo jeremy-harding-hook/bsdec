@@ -1,13 +1,14 @@
-﻿using Avalonia.Platform.Storage;
+﻿using Avalonia.Controls;
+using Avalonia.Platform.Storage;
 
 namespace BsdecGui.ViewModels
 {
-    public class MainViewModel : ViewModelBase
+    internal class MainViewModel : ViewModelBase
     {
         public SchemaGen SchemaGen { get; }
 
-        public MainViewModel(IStorageProvider storageProvider) { 
-            SchemaGen = new SchemaGen(storageProvider);
+        public MainViewModel(IStorageProvider storageProvider, Window? mainWindow = null) { 
+            SchemaGen = new SchemaGen(storageProvider, mainWindow);
         }
     }
 }

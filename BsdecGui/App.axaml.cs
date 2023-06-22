@@ -21,7 +21,7 @@ namespace BsdecGui
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
                 desktop.MainWindow = new MainWindow();
-                desktop.MainWindow.DataContext = new MainViewModel(desktop.MainWindow.StorageProvider);
+                desktop.MainWindow.DataContext = new MainViewModel(desktop.MainWindow.StorageProvider, desktop.MainWindow);
             }
             else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
             {
