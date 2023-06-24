@@ -1,6 +1,8 @@
 ﻿using NLog;
 using NLog.Config;
 using NLog.Targets;
+using System;
+using System.IO;
 using static System.Environment;
 
 namespace BsdecCore
@@ -26,9 +28,14 @@ namespace BsdecCore
                 string fileAppendix = uniqueFileNumber == 0 ? "" : $"_{uniqueFileNumber:D3}";
                 logfilePath = Path.Combine(
                 GetFolderPath(SpecialFolder.ApplicationData),
+#if RELEASELINUX
                 "bsdec",
                 "logs",
-                $"bsdec-log-{currentDateTime}{fileAppendix}.log"
+#else
+                "Bsdec",
+                "Logs",
+#endif
+                $"bsdec-gui-log-{currentDateTime}{fileAppendix}.log"
                 );
                 uniqueFileNumber ++;
             } while (Path.Exists(logfilePath));

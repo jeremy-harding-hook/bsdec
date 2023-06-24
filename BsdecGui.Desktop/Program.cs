@@ -18,6 +18,7 @@ namespace BsdecGui.Desktop
             try
             {
                 Log.Debug("Starting GUI...");
+                Log.Debug($"Args: {string.Join(", ", args)}");
                 BuildAvaloniaApp()
                 .StartWithClassicDesktopLifetime(args);
                 Log.Debug("GUI closed.");

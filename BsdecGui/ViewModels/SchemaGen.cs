@@ -3,7 +3,6 @@ using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using BsdecGui.ViewModels.FilePickers;
 using BsdecGui.Views;
-using NLog;
 using ReactiveUI;
 using System;
 using System.Threading;
