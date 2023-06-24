@@ -1,0 +1,48 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<!--If you are willing to use Windows/MacOS native APIs you will need to create 3 projects.
+    One for Windows with net7.0-windows TFM, one for MacOS with net7.0-macos and one with net7.0 TFM for Linux.-->
+		<TargetFramework>net7.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+		<ApplicationManifest>app.manifest</ApplicationManifest>
+		<ApplicationIcon>bsdec.ico</ApplicationIcon>
+		<PublishSingleFile>true</PublishSingleFile>
+		<SelfContained>true</SelfContained>
+		<InvariantGlobalization>true</InvariantGlobalization>
+		<Configurations>Debug;ReleaseWindows;ReleaseLinux</Configurations>
+		<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+		<StartupObject>BsdecGui.Desktop.Program</StartupObject>
+		<Title>BsdecGui</Title>
+		<Product>BsdecGui</Product>
+		<Company>Bsdec</Company>
+		<Description>GUI version of the Bsdec savefile editing tool</Description>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseLinux|AnyCPU'">
+		<Optimize>True</Optimize>
+		<RuntimeIdentifier>linux-x64</RuntimeIdentifier>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseWindows|AnyCPU'">
+		<Optimize>True</Optimize>
+		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
+	</PropertyGroup>
+	<ItemGroup Condition="'$(Configuration)'!='ReleaseLinux'">
+		<Content Include="bsdec.ico"/>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\BsdecCore\BsdecCore.csproj" />
+		<ProjectReference Include="..\BsdecGui\BsdecGui.csproj" />
+	</ItemGroup>
+
+	<Target Name="PostPublish" AfterTargets="Publish">
+		<Exec Command="echo post-publish action: renaming executables" />
+		<Move Condition="'$(Configuration)'=='ReleaseWindows'" SourceFiles="$(PublishDir)\BsdecGui.Desktop.exe" DestinationFiles="$(PublishDir)\BsdecGui.exe" />
+		<Move Condition="'$(Configuration)'=='ReleaseLinux'" SourceFiles="$(PublishDir)\BsdecGui.Desktop" DestinationFiles="$(PublishDir)\bsdec-gui" />
+	</Target>
+</Project>
