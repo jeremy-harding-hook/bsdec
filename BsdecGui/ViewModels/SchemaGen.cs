@@ -6,7 +6,7 @@ using BsdecGui.Views;
 using ReactiveUI;
 using System;
 using System.Threading;
-using static BsdecCore.Logging;
+using static BsdecGui.Logging;
 
 namespace BsdecGui.ViewModels
 {

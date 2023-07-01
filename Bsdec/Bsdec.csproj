@@ -33,7 +33,6 @@
 
 	<Target Name="PostPublish" AfterTargets="Publish">
 		<Exec Command="echo post-publish action: renaming executables" />
-		<!--<Move Condition="'$(Configuration)'=='ReleaseWindows'" SourceFiles="$(PublishDir)\BsdecGui.Desktop.exe" DestinationFiles="$(PublishDir)\BsdecGui.exe" />-->
 		<Move Condition="'$(Configuration)'=='ReleaseLinux'" SourceFiles="$(PublishDir)\Bsdec" DestinationFiles="$(PublishDir)\bsdec" />
 	</Target>
 </Project>

@@ -5,7 +5,7 @@ using System;
 using System.IO;
 using static System.Environment;
 
-namespace BsdecCore
+namespace BsdecGui
 {
     public static class Logging
     {
@@ -37,7 +37,7 @@ namespace BsdecCore
 #endif
                 $"bsdec-gui-log-{currentDateTime}{fileAppendix}.log"
                 );
-                uniqueFileNumber ++;
+                uniqueFileNumber++;
             } while (Path.Exists(logfilePath));
 
             FileTarget logfileTarget = new("logfile")
