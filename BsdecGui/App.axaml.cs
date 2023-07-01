@@ -5,7 +5,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
 using BsdecGui.ViewModels;
 using BsdecGui.Views;
-using static BsdecCore.Logging;
+using static BsdecGui.Logging;
 
 namespace BsdecGui
 {

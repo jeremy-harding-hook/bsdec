@@ -1,9 +1,9 @@
 ﻿using System;
 
-namespace BsdecSchemaGen
+namespace BsdecCore
 {
     [AttributeUsage(AttributeTargets.Class)]
-    public class BsdecToplevelSaveClassAttribute : Attribute { }
+    public class BsdecToplevelSavefileClassAttribute : Attribute { }
 
     [AttributeUsage(AttributeTargets.Method)]
     public class BsdecReadMethodAttribute : Attribute { }

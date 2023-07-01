@@ -3,14 +3,13 @@ using Mono.Cecil;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Mono.Cecil.Rocks;
 
 namespace BsdecSchemaGen.AssemblyBuilder
 {
     internal static class MethodBuilder
     {
-        static readonly List<MethodReference>? handledMethods = new();
+        static readonly List<MethodReference> handledMethods = new();
         public static MethodReference FindOrCloneMethod(ModuleDefinition newModule, ModuleDefinition oldModule, MethodReference methodReference)
         {
             MethodReference? foundMethod = handledMethods?.FirstOrDefault(x => x.FullName == methodReference.FullName);
@@ -58,6 +57,13 @@ namespace BsdecSchemaGen.AssemblyBuilder
             if (foundMethod is not MethodSpecification)
             {
                 foundMethod.DeclaringType = TypeBuilder.FindOrCreateGenericType(newModule, oldModule, methodReference.DeclaringType);
+            }
+
+            foreach (TypeDefinition derivedType in GetAllDerivedTypesInModule(oldModule, methodDefinition.DeclaringType))
+            {
+                MethodDefinition? overridingMethod = derivedType.GetMethods().FirstOrDefault(x => x.GetBaseMethod() == methodDefinition);
+                if (overridingMethod != null)
+                    FindOrCloneMethod(newModule, oldModule, overridingMethod);
             }
 
             return foundMethod;
@@ -113,7 +119,7 @@ namespace BsdecSchemaGen.AssemblyBuilder
 
             foreach (ExceptionHandler item in method.Body.ExceptionHandlers)
             {
-                ExceptionHandler handler = new ExceptionHandler(item.HandlerType)
+                ExceptionHandler handler = new(item.HandlerType)
                 {
                     FilterStart = item.FilterStart,
                     HandlerStart = item.HandlerStart,
@@ -126,6 +132,26 @@ namespace BsdecSchemaGen.AssemblyBuilder
             }
 
             return methodCopy;
+        }
+
+        /// <summary>
+        /// Gets the derived types in the current module recursively, but excluding types that inherit indirectly through an
+        /// out-of-module third party. I.e. if A : B : C and C is the value of <paramref name="typeDefinition"/>, A will be
+        /// in the return set if and only if B is defined in the current module. Due to this, it is also true that if A is
+        /// returned then B will also be returned.
+        /// </summary>
+        /// <param name="module">The module to search in.</param>
+        /// <param name="typeDefinition">The type to search for. This does not have to be defined in the module passed as
+        /// the first parameter, but any out-of-module third parties will not be considered in the inheritence tree.</param>
+        /// <returns>A list of the definitions of found types.</returns>
+        private static List<TypeDefinition> GetAllDerivedTypesInModule(ModuleDefinition module, TypeDefinition typeDefinition)
+        {
+            List<TypeDefinition> derivedTypes = module.GetAllTypes().Where(x => x.BaseType != null && x.BaseType.FullName == typeDefinition.FullName).ToList();
+            for (int i = 0; i < derivedTypes.Count; i++)
+            {
+                derivedTypes.AddRange(GetAllDerivedTypesInModule(module, derivedTypes[i]));
+            }
+            return derivedTypes;
         }
     }
 }

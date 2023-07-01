@@ -2,7 +2,7 @@
 
 using Avalonia;
 using Avalonia.ReactiveUI;
-using static BsdecCore.Logging;
+using static BsdecGui.Logging;
 
 namespace BsdecGui.Desktop
 {

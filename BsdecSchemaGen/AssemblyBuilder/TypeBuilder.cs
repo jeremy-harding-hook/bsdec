@@ -2,9 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using BsdecSchemaGen.AssemblyBuilder;
 using Mono.Cecil.Rocks;
 
 namespace BsdecSchemaGen.AssemblyBuilder
@@ -17,7 +14,7 @@ namespace BsdecSchemaGen.AssemblyBuilder
             if (type == null)
                 return null!;
 
-            TypeReference? foundType = handledTypes?.FirstOrDefault(x => x.FullName == type.FullName);
+            TypeReference? foundType = handledTypes.FirstOrDefault(x => x.FullName == type.FullName);
             if (foundType != null)
             {
                 return foundType;
@@ -50,7 +47,6 @@ namespace BsdecSchemaGen.AssemblyBuilder
                 }
             }
 
-
             if (foundType is not GenericInstanceType genericType)
             {
                 return foundType;
@@ -70,7 +66,22 @@ namespace BsdecSchemaGen.AssemblyBuilder
             if (definition == null)
             {
                 definition = new(type.Namespace, type.Name, type.Resolve().Attributes, FindOrCreateGenericType(newModule, oldModule, type.Resolve().BaseType));
-                newModule.Types.Add(definition);
+                definition.DeclaringType = FindOrCreateGenericType(newModule, oldModule, type.DeclaringType)?.Resolve();
+                
+                if (definition.DeclaringType != null)
+                {
+                    definition.DeclaringType.NestedTypes.Add(definition);
+                }
+                else
+                {
+                    newModule.Types.Add(definition);
+                }
+
+                IEnumerable<TypeDefinition> derivedTypes = oldModule.GetAllTypes().Where(x => x.BaseType != null && x.BaseType.FullName == definition.FullName);
+                foreach (TypeDefinition derivedType in derivedTypes)
+                {
+                    FindOrCreateGenericType(newModule, oldModule, derivedType).Resolve();
+                }
             }
 
             return definition;

@@ -1,6 +1,6 @@
 ﻿using Avalonia.Platform.Storage;
 using System.Collections.Generic;
-using static BsdecCore.Logging;
+using static BsdecGui.Logging;
 
 namespace BsdecGui.ViewModels.FilePickers
 {

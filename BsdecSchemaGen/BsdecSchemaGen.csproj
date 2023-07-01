@@ -35,6 +35,10 @@
 	  <PackageReference Include="Mono.Cecil" Version="0.11.5" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <ProjectReference Include="..\BsdecCore\BsdecCore.csproj" />
+	</ItemGroup>
+
 	<Target Name="PostPublish" AfterTargets="Publish">
 		<Exec Command="echo post-publish action: renaming executables" />
 		<Move Condition="'$(Configuration)'=='ReleaseLinux'" SourceFiles="$(PublishDir)\BsdecSchemaGen" DestinationFiles="$(PublishDir)\bsdec-schema-gen" />

@@ -2,7 +2,7 @@
 using ReactiveUI;
 using System;
 using System.Threading.Tasks;
-using static BsdecCore.Logging;
+using static BsdecGui.Logging;
 
 namespace BsdecGui.ViewModels.FilePickers
 {

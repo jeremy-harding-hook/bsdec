@@ -27,18 +27,14 @@ namespace BsdecSchemaGen.Functions
             $"    -h\n" +
             $"    --help\n" +
             $"        Returns this help text.\n\n" +
-            $"If there are extra parameters to pass into the reader and writer methods, that\n" +
-            $"can be achieved by appending them to the method name like so:\n" +
-            "    -r reader_method_name+param_name_1=some_value+param_name_2=another_value\n" +
-            "Note this only works with parameters of primitive type.\n\n" +
             $"Parameters:\n" +
             $"    class_name:\n" +
             $"        The name of the top-level class corresponding to the object being saved,\n" +
             $"        fully qualified with namespace. If no fully-qualified match exists, the\n" +
-            $"        program will instead treat the class_name as partially qualified and will\n" +
-            $"        try to make it work.\n\n" +
+            $"        program will instead treat the class_name as partially qualified and try\n" +
+            $"        to make it work.\n\n" +
             $"    assembly_file:\n" +
-            $"        The path to the assembly containing the saving code for saving.\n\n" +
+            $"        The path to the assembly containing the code for saving.\n\n" +
             $"Exit values:\n" +
             $"    0: Successfully executed.\n" +
             $"    1: Generic error prevented the schema from being generated.\n" +

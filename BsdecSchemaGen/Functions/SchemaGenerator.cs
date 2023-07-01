@@ -2,10 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Mono.Cecil;
-using Mono.Cecil.Rocks;
 
 namespace BsdecSchemaGen.Functions
 {
@@ -84,9 +81,6 @@ namespace BsdecSchemaGen.Functions
             {
                 Console.Error.WriteLine("Warning: The generated schema will support writing new save files, but will not permit reading from existing ones.");
             }
-
-            Console.WriteLine($"Declaring type of writer: {toplevelWriterMethod?.DeclaringType.FullName}");
-            Console.WriteLine($"Declaring type of reader: {toplevelReaderMethod?.DeclaringType.FullName}");
 
             return AssemblyBuilder.AssemblyBuilder.BuildAssembly(module, savefileClass, toplevelReaderMethod, toplevelWriterMethod);
         }
