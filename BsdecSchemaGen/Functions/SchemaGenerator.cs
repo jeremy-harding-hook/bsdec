@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using BsdecSchemaGen.CliParsing;
 using Mono.Cecil;
 using Mono.Cecil.Rocks;
 
@@ -76,18 +75,20 @@ namespace BsdecSchemaGen.Functions
                 return 1;
             }
 
-            ReaderParser readerParser = new(toplevelReaderMethod);
-            WriterParser writerParser = new(toplevelWriterMethod);
-
-            string? readerOut;
-            string? writerOut;
-            do
+            if(toplevelWriterMethod == null)
             {
-                readerOut = readerParser.ReadNextChunk();
-                writerOut = writerParser.ReadNextChunk();
-            }while (readerOut != null || writerOut != null);
+                Console.Error.WriteLine("Warning: The generated schema will only support reading of preexisting save files.");
+            }
 
-            return 0;
+            if(toplevelReaderMethod == null)
+            {
+                Console.Error.WriteLine("Warning: The generated schema will support writing new save files, but will not permit reading from existing ones.");
+            }
+
+            Console.WriteLine($"Declaring type of writer: {toplevelWriterMethod?.DeclaringType.FullName}");
+            Console.WriteLine($"Declaring type of reader: {toplevelReaderMethod?.DeclaringType.FullName}");
+
+            return AssemblyBuilder.AssemblyBuilder.BuildAssembly(module, savefileClass, toplevelReaderMethod, toplevelWriterMethod);
         }
 
         private static ModuleDefinition? OpenAssembly(string assembly)
