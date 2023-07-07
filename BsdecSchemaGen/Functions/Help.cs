@@ -9,7 +9,7 @@ namespace BsdecSchemaGen.Functions
     internal static class Help
     {
         private static readonly string errorText =
-            $"Usage: {Program.ProgramFileName} [options] class_name assembly_file\n\n" +
+            $"Usage: {Program.ProgramFileName} [options] class_name assembly_file output_file\n\n" +
             $"A tool for generating a savefile schema based on an assembly. This schema\n" +
             $"can then be used in conjunction with bsdec to permit manual reading and writing\n" +
             $"of savefiles.\n" +
@@ -35,6 +35,8 @@ namespace BsdecSchemaGen.Functions
             $"        to make it work.\n\n" +
             $"    assembly_file:\n" +
             $"        The path to the assembly containing the code for saving.\n\n" +
+            $"    output_file:\n" +
+            $"        The location to which the generated schema is to be saved.\n\n" +
             $"Exit values:\n" +
             $"    0: Successfully executed.\n" +
             $"    1: Generic error prevented the schema from being generated.\n" +

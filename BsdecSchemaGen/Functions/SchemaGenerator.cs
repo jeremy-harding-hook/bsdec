@@ -8,19 +8,25 @@ namespace BsdecSchemaGen.Functions
 {
     internal static class SchemaGenerator
     {
-        public static int Run(string? assembly, string? className, string? readerName, string? writerName)
+        public static int Run(string? assembly, string? filepath, string? className, string? readerName, string? writerName)
         {
-            int returnValue = ValidateInputs(assembly, className, readerName, writerName);
-            return returnValue != 0 ? returnValue : GenerateSchema(assembly!, className!, readerName, writerName);
+            int returnValue = ValidateInputs(assembly, filepath, className, readerName, writerName);
+            return returnValue != 0 ? returnValue : GenerateSchema(assembly!, filepath!, className!, readerName, writerName);
         }
 
-        private static int ValidateInputs(string? assembly, string? className, string? readerName, string? writerName)
+        private static int ValidateInputs(string? assembly, string? filepath, string? className, string? readerName, string? writerName)
         {
             int returnValue = 0;
 
             if (assembly == null)
             {
                 Console.Error.WriteLine("Assembly filepath must not be null.");
+                returnValue = 2;
+            }
+
+            if (filepath == null)
+            {
+                Console.Error.WriteLine("Output filepath must not be null.");
                 returnValue = 2;
             }
 
@@ -44,7 +50,7 @@ namespace BsdecSchemaGen.Functions
             return returnValue;
         }
 
-        private static int GenerateSchema(string assembly, string className, string? readerName, string? writerName)
+        private static int GenerateSchema(string assembly, string destinationFilepath, string className, string? readerName, string? writerName)
         {
             using ModuleDefinition? module = OpenAssembly(assembly);
             if (module == null)
@@ -82,7 +88,7 @@ namespace BsdecSchemaGen.Functions
                 Console.Error.WriteLine("Warning: The generated schema will support writing new save files, but will not permit reading from existing ones.");
             }
 
-            return AssemblyBuilder.AssemblyBuilder.BuildAssembly(module, savefileClass, toplevelReaderMethod, toplevelWriterMethod);
+            return AssemblyBuilder.AssemblyBuilder.BuildAssembly(module, destinationFilepath, savefileClass, toplevelReaderMethod, toplevelWriterMethod);
         }
 
         private static ModuleDefinition? OpenAssembly(string assembly)
@@ -123,7 +129,7 @@ namespace BsdecSchemaGen.Functions
                     return null;
                 case 1:
                     classFound = candidates.First();
-                    Console.Error.WriteLine($"Class {className} was not initially found, assuming {classFound.FullName}");
+                    Console.Error.WriteLine($"Class {className} was not initially found, assuming {classFound.FullName}.");
                     return classFound;
                 default:
                     Console.Error.WriteLine($"Class {className} was not found, did you mean one of the following?");

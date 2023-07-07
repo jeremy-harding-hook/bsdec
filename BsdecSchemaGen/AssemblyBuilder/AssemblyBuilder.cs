@@ -7,7 +7,7 @@ namespace BsdecSchemaGen.AssemblyBuilder
 {
     internal static class AssemblyBuilder
     {
-        public static int BuildAssembly(ModuleDefinition sourceModule, TypeDefinition topleveSavefileClass, MethodDefinition? toplevelReaderMethod, MethodDefinition? toplevelWriterMethod)
+        public static int BuildAssembly(ModuleDefinition sourceModule, string destinationFilepath, TypeDefinition topleveSavefileClass, MethodDefinition? toplevelReaderMethod, MethodDefinition? toplevelWriterMethod)
         {
             string name = $"{topleveSavefileClass.Name}-savefile-Bsdec-schema";
             AssemblyDefinition schemaAssembly = AssemblyDefinition.CreateAssembly(new AssemblyNameDefinition(name, new Version(1, 0, 0, 0)), $"{name}.dll", ModuleKind.Dll);
@@ -35,7 +35,7 @@ namespace BsdecSchemaGen.AssemblyBuilder
                     string text = toplevelWriterMethod == null ? "Failed to create read method. No schema will be saved." : "Failed to create read method. The resulting schema will only allow writing.";
                     Console.Error.WriteLine(text);
                     return toplevelWriterMethod != null
-                        ? BuildAssembly(sourceModule, topleveSavefileClass, null, toplevelWriterMethod)
+                        ? BuildAssembly(sourceModule, destinationFilepath, topleveSavefileClass, null, toplevelWriterMethod)
                         : 1;
                 }
             }
@@ -58,7 +58,7 @@ namespace BsdecSchemaGen.AssemblyBuilder
                     string text = toplevelReaderMethod == null ? "Failed to create write method. The resulting schema will only allow reading." : "Failed to create write method. No schema will be saved.";
                     Console.Error.WriteLine(text);
                     return toplevelReaderMethod != null
-                        ? BuildAssembly(sourceModule, topleveSavefileClass, toplevelReaderMethod, null)
+                        ? BuildAssembly(sourceModule, destinationFilepath, topleveSavefileClass, toplevelReaderMethod, null)
                         : 1;
                 }
             }
@@ -83,7 +83,7 @@ namespace BsdecSchemaGen.AssemblyBuilder
 
             try
             {
-                schemaAssembly.Write($"{name}.dll");
+                schemaAssembly.Write(destinationFilepath);
             }
             catch (Exception ex)
             {

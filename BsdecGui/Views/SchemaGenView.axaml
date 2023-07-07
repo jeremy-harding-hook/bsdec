@@ -54,14 +54,15 @@
 			Margin="0 0 10 0">
 			<TextBox
 				AcceptsReturn="True"
-				TextWrapping="WrapWithOverflow"
+				TextWrapping="Wrap"
 				HorizontalAlignment="Stretch"
 				VerticalAlignment="Stretch"
 				Watermark="No errors thus far..."
 				IsReadOnly="True"
 				Text="{Binding Errors}"
 				Foreground="Firebrick"
-				MaxWidth="{Binding #ControlGrid.Bounds.Width}"/>
+				MaxWidth="{Binding #ControlGrid.Bounds.Width}"
+				CaretIndex="{Binding ErrorCaretIndex}"/>
 		</Panel>
 
 	</Grid>
