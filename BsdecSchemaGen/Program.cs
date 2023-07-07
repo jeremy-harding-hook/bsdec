@@ -47,9 +47,10 @@ namespace BsdecSchemaGen
             };
             string? className = null;
             string? assembly = null;
+            string? outputFile = null;
             string? readerName = null;
             string? writerName = null;
-            Dictionary<string, string> readerParams = new ();
+            Dictionary<string, string> readerParams = new();
             Dictionary<string, string> writerParams = new();
 
             Regex multiflagFinder = shortFlags();
@@ -71,12 +72,12 @@ namespace BsdecSchemaGen
                 }
                 else if (readerOption.set && readerName == null)
                 {
-                    if(!TryParseIoMethod(arg, readerParams, out readerName)) 
+                    if (!TryParseIoMethod(arg, readerParams, out readerName))
                         return 2;
                 }
                 else if (writerOption.set && writerName == null)
                 {
-                    if(!TryParseIoMethod(arg, writerParams, out writerName))
+                    if (!TryParseIoMethod(arg, writerParams, out writerName))
                         return 2;
                 }
                 else if (className == null)
@@ -86,6 +87,10 @@ namespace BsdecSchemaGen
                 else if (assembly == null)
                 {
                     assembly = arg;
+                }
+                else if (outputFile == null)
+                {
+                    outputFile = arg;
                 }
                 else
                 {
@@ -99,7 +104,7 @@ namespace BsdecSchemaGen
                 return 0;
             }
 
-            return SchemaGenerator.Run(assembly, className, readerName, writerName);
+            return SchemaGenerator.Run(assembly, outputFile, className, readerName, writerName);
         }
 
         private static int FailHelpfully()
@@ -134,14 +139,14 @@ namespace BsdecSchemaGen
             return false;
         }
 
-        private static bool TryParseIoMethod(string commandLineArg, Dictionary<string,string> parameterDictionary, out string methodName)
+        private static bool TryParseIoMethod(string commandLineArg, Dictionary<string, string> parameterDictionary, out string methodName)
         {
             string[] methodParameters = commandLineArg.Split('+');
             methodName = methodParameters[0];
             for (int i = 1; i < methodParameters.Length; i++)
             {
-                string[] splitParameter = methodParameters[i].Split('=',2);
-                if(splitParameter.Length != 2)
+                string[] splitParameter = methodParameters[i].Split('=', 2);
+                if (splitParameter.Length != 2)
                 {
                     Console.Error.WriteLine($"Invalid method parameter syntax: {methodParameters[i]}");
                     Console.Error.WriteLine($"See '{Program.ProgramFileName}' --help for correct usage.");

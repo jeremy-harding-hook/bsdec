@@ -1,10 +1,12 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
+using BsdecGui.Outsourcing;
 using BsdecGui.ViewModels.FilePickers;
 using BsdecGui.Views;
 using ReactiveUI;
 using System;
+using System.IO;
 using System.Threading;
 using static BsdecGui.Logging;
 
@@ -62,6 +64,13 @@ namespace BsdecGui.ViewModels
             private set => this.RaiseAndSetIfChanged(ref errors, value);
         }
 
+        private int errorCaretIndex;
+        public int ErrorCaretIndex
+        {
+            get => errorCaretIndex;
+            set => this.RaiseAndSetIfChanged(ref errorCaretIndex, value);
+        }
+
         private IImmutableSolidColorBrush buttonBackground = Brushes.Green;
         public IImmutableSolidColorBrush ButtonBackground
         {
@@ -77,39 +86,60 @@ namespace BsdecGui.ViewModels
 
         private readonly FilePickerFileType bsdecFileType = new("Bsdec Fileformat Description File")
         {
-            Patterns = new[] { "*.bsdec" },
-            MimeTypes = new[] { "application/bsdec" }
+            Patterns = new[] { "*.dll" },
+            MimeTypes = new[] { "application/x-msdownload" }
             // TODO: Figure out how the Apple filetype thing is supposed to be done.
         };
 
         public SchemaGen(IStorageProvider storageProvider, Window? mainWindow)
         {
             AssemblyFilePicker = new OpenFilePicker(storageProvider);
-            OutputFilePicker = new SaveFilePicker(storageProvider, "*.bsdec", bsdecFileType);
+            OutputFilePicker = new SaveFilePicker(storageProvider, "*.dll", bsdecFileType);
             this.mainWindow = mainWindow;
         }
 
-        // TODO: replace with something in the generator class
-        bool generationOngoing = false;
-        readonly System.Timers.Timer testingTimer = new(10000);
+        SchemaGenerator? generator = null;
+        bool GenerationOngoing => generator != null;
+
         public void ButtonMashed()
         {
             try
             {
-                if (generationOngoing)
+                if (GenerationOngoing)
                 {
                     IfDesiredStopGenerationAsync();
                 }
                 else
                 {
-                    generationOngoing = true;
-                    testingTimer.Elapsed += OnGenerationStopped;
-                    testingTimer.Start();
-                    OnGenerationStarted();
+                    if (string.IsNullOrWhiteSpace(ReadMethodName))
+                        ReadMethodName = null;
+                    if (string.IsNullOrWhiteSpace(WriteMethodName))
+                        WriteMethodName = null;
+
+                    if (string.IsNullOrEmpty(AssemblyFilePicker.Path) ||
+                        string.IsNullOrWhiteSpace(TopLevelClassName) ||
+                        ReadMethodName == null && WriteMethodName == null)
+                    {
+                        string message =
+                            "The following fields are required:\n" +
+                            "\tTop-level class name\n" +
+                            "\tAt least one of Reader or Writer method names (preferably both)\n" +
+                            "\tProgram file path";
+                        MessageBox.Show(mainWindow, message, "Empty fields", MessageBox.MessageBoxButtons.Ok, null, true);
+                        return;
+                    }
+                    string outputPath = string.IsNullOrWhiteSpace(OutputFilePicker.Path) ? Path.GetTempFileName() : OutputFilePicker.Path;
+                    generator = new(AssemblyFilePicker.Path, outputPath, TopLevelClassName, ReadMethodName, WriteMethodName);
+                    
+                    generator.OnGenerationCommenced += Generator_OnGenerationCommenced;
+                    generator.OnGenerationCompleted += Generator_OnGenerationCompleted;
+                    generator.OnErrorRecieved += Generator_OnErrorRecieved;
+
+                    Output = string.Empty;
+                    Errors = string.Empty;
+
+                    generator.Start();
                 }
-                // TODO: implement SchemaGenerator class to handle the i/o related to generation (via seperate app etc) as well as
-                // passing the data into the (to be implemented) loader/sessionManager/whatever you want to call it.
-                // Use events for OnGenerationStarted/OnGenerationEnded, as well as OnErrorsRecieved and (probably?) OnOutputRecieved
             }
             catch (Exception ex)
             {
@@ -117,38 +147,47 @@ namespace BsdecGui.ViewModels
             }
         }
 
-        private void OnGenerationStarted()
+        private void Generator_OnGenerationCommenced(object? sender, EventArgs e)
         {
             try
             {
                 ButtonText = "Kill";
                 ButtonBackground = Brushes.Red;
-                generationOngoing = true;
-                Errors += "Generation is not yet implemented. This is just a simulation.\n";
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Unhandled exception caught in {0}.{1}", nameof(SchemaGen), nameof(OnGenerationStarted));
+                Log.Error(ex, "Unhandled exception caught in {0}.{1}", nameof(SchemaGen), nameof(Generator_OnGenerationCommenced));
             }
         }
 
-        private void OnGenerationStopped(object? sender, EventArgs e)
+        private void Generator_OnGenerationCompleted(object? sender, EventArgs e)
         {
+            // TODO: pass generator.OutputPath to the loader that the rest of the program uses.
+            // TODO: decompile and add as output the code
+            if (generator!.ExitCode == 0)
+                Errors += $"The output file can be found in {Path.GetFullPath(generator!.OutputPath)}\n";
+            if (generator!.ExitCode == 4)
+                Errors += "Process killed.\n";
+
             try
             {
+                generator = null;
                 killConfermationCancellation.Cancel();
                 ButtonText = "Run";
                 ButtonBackground = Brushes.Green;
-                generationOngoing = false;
-                testingTimer.Elapsed -= OnGenerationStopped;
-                testingTimer.Stop();
-                Output += "Here's some sample output:\n-int someProperty\n-string someOtherProperty\n";
+                ErrorCaretIndex = Errors.Length - 1;
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Unhandled exception caught in {0}.{1}", nameof(SchemaGen), nameof(OnGenerationStopped));
+                Log.Error(ex, "Unhandled exception caught in {0}.{1}", nameof(SchemaGen), nameof(Generator_OnGenerationCompleted));
             }
         }
+
+        private void Generator_OnErrorRecieved(object? sender, StringOutputEventArgs e)
+        {
+            Errors += e.DataOut;
+        }
+
 
         CancellationTokenSource killConfermationCancellation = new();
         private async void IfDesiredStopGenerationAsync()
@@ -160,8 +199,7 @@ namespace BsdecGui.ViewModels
                 MessageBox.MessageBoxResult result = await MessageBox.Show(mainWindow, message, "Stop generation?", MessageBox.MessageBoxButtons.DieCancel, killConfermationCancellation);
                 if (result == MessageBox.MessageBoxResult.Kill)
                 {
-                    // TODO: implement proper killing of the process
-                    OnGenerationStopped(this, new EventArgs());
+                    generator?.Kill();
                 }
             }
             catch (Exception ex)

@@ -31,7 +31,7 @@ namespace BsdecGui.Views
             AvaloniaXamlLoader.Load(this);
         }
 
-        public static Task<MessageBoxResult> Show(Window? parent, string text, string title, MessageBoxButtons buttons, CancellationTokenSource tokenSource)
+        public static Task<MessageBoxResult> Show(Window? parent, string text, string title, MessageBoxButtons buttons, CancellationTokenSource? tokenSource = null, bool leftAligned = false)
         {
             MessageBox msgbox = new()
             {
@@ -41,6 +41,10 @@ namespace BsdecGui.Views
             if (textBlock != null)
             {
                 textBlock.Text = text;
+                if(leftAligned)
+                {
+                    textBlock.TextAlignment = Avalonia.Media.TextAlignment.Left;
+                }
             }
 
             StackPanel? buttonPanel = msgbox.FindControl<StackPanel>("Buttons") ?? throw new System.Exception("Can't find control 'Buttons' in view.");
@@ -83,7 +87,7 @@ namespace BsdecGui.Views
             TaskCompletionSource<MessageBoxResult> tcs = new();
 
             MessageBoxResult defaultCancellationResult = MessageBoxResult.Cancel;
-            CancellationTokenRegistration registration = tokenSource.Token.Register(() =>
+            CancellationTokenRegistration? registration = tokenSource?.Token.Register(() =>
             {
                 result = defaultCancellationResult;
                 Dispatcher.UIThread.InvokeAsync(() =>
@@ -95,14 +99,14 @@ namespace BsdecGui.Views
 
             msgbox.Closed += delegate
             {
-                registration.Unregister();
+                registration?.Unregister();
                 tcs.TrySetResult(result);
             };
 
             // Just in case
-            if (tokenSource.IsCancellationRequested)
+            if (tokenSource?.IsCancellationRequested ?? false)
             {
-                registration.Unregister();
+                registration?.Unregister();
                 tcs.TrySetResult(defaultCancellationResult);
                 return tcs.Task;
             }

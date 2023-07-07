@@ -65,9 +65,11 @@ namespace BsdecSchemaGen.AssemblyBuilder
             TypeDefinition? definition = newModule.GetAllTypes().FirstOrDefault(x => x.FullName == type.FullName);
             if (definition == null)
             {
-                definition = new(type.Namespace, type.Name, type.Resolve().Attributes, FindOrCreateGenericType(newModule, oldModule, type.Resolve().BaseType));
-                definition.DeclaringType = FindOrCreateGenericType(newModule, oldModule, type.DeclaringType)?.Resolve();
-                
+                definition = new(type.Namespace, type.Name, type.Resolve().Attributes, FindOrCreateGenericType(newModule, oldModule, type.Resolve().BaseType))
+                {
+                    DeclaringType = FindOrCreateGenericType(newModule, oldModule, type.DeclaringType)?.Resolve()
+                };
+
                 if (definition.DeclaringType != null)
                 {
                     definition.DeclaringType.NestedTypes.Add(definition);
