@@ -24,7 +24,7 @@ namespace BsdecSchemaGen
                 if (string.IsNullOrEmpty(ProgramFileName))
                     ProgramFileName = ShippedProgramFilename;
 
-                int returnValue = HandleArgs(args.ToList());
+                int returnValue = HandleArgs(args);
                 Environment.Exit(returnValue);
             }
             catch (Exception ex)
@@ -34,7 +34,7 @@ namespace BsdecSchemaGen
             }
         }
 
-        static int HandleArgs(List<string> args)
+        static int HandleArgs(string[] args)
         {
             Option helpOption = new("help", 'h');
             Option readerOption = new("reader", 'r');
@@ -50,8 +50,6 @@ namespace BsdecSchemaGen
             string? outputFile = null;
             string? readerName = null;
             string? writerName = null;
-            Dictionary<string, string> readerParams = new();
-            Dictionary<string, string> writerParams = new();
 
             Regex multiflagFinder = shortFlags();
             Regex longFlagFinder = longFlags();
@@ -72,13 +70,11 @@ namespace BsdecSchemaGen
                 }
                 else if (readerOption.set && readerName == null)
                 {
-                    if (!TryParseIoMethod(arg, readerParams, out readerName))
-                        return 2;
+                    readerName = arg;
                 }
                 else if (writerOption.set && writerName == null)
                 {
-                    if (!TryParseIoMethod(arg, writerParams, out writerName))
-                        return 2;
+                    writerName = arg;
                 }
                 else if (className == null)
                 {
@@ -137,24 +133,6 @@ namespace BsdecSchemaGen
                 }
             }
             return false;
-        }
-
-        private static bool TryParseIoMethod(string commandLineArg, Dictionary<string, string> parameterDictionary, out string methodName)
-        {
-            string[] methodParameters = commandLineArg.Split('+');
-            methodName = methodParameters[0];
-            for (int i = 1; i < methodParameters.Length; i++)
-            {
-                string[] splitParameter = methodParameters[i].Split('=', 2);
-                if (splitParameter.Length != 2)
-                {
-                    Console.Error.WriteLine($"Invalid method parameter syntax: {methodParameters[i]}");
-                    Console.Error.WriteLine($"See '{Program.ProgramFileName}' --help for correct usage.");
-                    return false;
-                }
-                parameterDictionary.Add(splitParameter[0], splitParameter[1]);
-            }
-            return true;
         }
 
         class Option

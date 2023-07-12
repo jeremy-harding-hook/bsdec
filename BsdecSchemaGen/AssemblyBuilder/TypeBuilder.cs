@@ -3,6 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Mono.Cecil.Rocks;
+using Mono.Cecil.Cil;
+using BsdecCore;
+using System.Text.Json.Serialization.Metadata;
+using System.Text.Json.Serialization;
+using System.Xml.Serialization;
 
 namespace BsdecSchemaGen.AssemblyBuilder
 {
@@ -80,9 +85,58 @@ namespace BsdecSchemaGen.AssemblyBuilder
                 }
 
                 IEnumerable<TypeDefinition> derivedTypes = oldModule.GetAllTypes().Where(x => x.BaseType != null && x.BaseType.FullName == definition.FullName);
-                foreach (TypeDefinition derivedType in derivedTypes)
+
+                if (derivedTypes.Any())
                 {
-                    FindOrCreateGenericType(newModule, oldModule, derivedType).Resolve();
+                    MethodReference jsonDerivedTypeAttributeConstructor = newModule.ImportReference(
+                    typeof(JsonDerivedTypeAttribute).GetConstructor(new Type[] {typeof(Type), typeof(string)}));
+
+                    MethodReference xmlDerivedTypeAttributeConstructor = newModule.ImportReference(
+                    typeof(XmlIncludeAttribute).GetConstructor(new Type[] { typeof(Type)}));
+
+                    CustomAttribute jsonAttribute;
+                    CustomAttribute xmlAttribute;
+                    List<CustomAttribute>jsonAttributes = new(); 
+                    List<CustomAttribute> xmlAttributes = new();
+
+                    bool derivedTypesInModule = false;
+
+                    foreach (TypeDefinition derivedType in derivedTypes)
+                    {
+                        TypeDefinition newType = FindOrCreateGenericType(newModule, oldModule, derivedType).Resolve();
+
+                        if(newType.Module == newModule)
+                        {
+                            derivedTypesInModule = true;
+
+                            jsonAttribute = new(jsonDerivedTypeAttributeConstructor);
+                            jsonAttribute.ConstructorArguments.Add(new(newModule.ImportReference(typeof(Type)), newType));
+                            jsonAttribute.ConstructorArguments.Add(new(newModule.ImportReference(typeof(string)), newType.FullName));
+jsonAttributes.Add(jsonAttribute);
+
+                            xmlAttribute = new(xmlDerivedTypeAttributeConstructor);
+                            xmlAttribute.ConstructorArguments.Add(new(newModule.ImportReference(typeof(Type)), newType));
+                           xmlAttributes.Add(xmlAttribute);
+                        }
+                    }
+
+                    if(derivedTypesInModule)
+                    {
+                        jsonAttribute = new(jsonDerivedTypeAttributeConstructor);
+                        jsonAttribute.ConstructorArguments.Add(new(newModule.ImportReference(typeof(Type)), definition));
+                        jsonAttribute.ConstructorArguments.Add(new(newModule.ImportReference(typeof(string)), definition.FullName));
+
+                        jsonAttributes.Add(jsonAttribute);
+
+                        foreach(CustomAttribute attribute in jsonAttributes)
+                        {
+                            definition.CustomAttributes.Add(attribute);
+                        }
+                        foreach (CustomAttribute attribute in xmlAttributes)
+                        {
+                            definition.CustomAttributes.Add(attribute);
+                        }
+                    }
                 }
             }
 
