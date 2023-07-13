@@ -104,7 +104,7 @@ namespace BsdecGui.Outsourcing
 
         private string BuildArgs()
         {
-            StringBuilder returnValue = new StringBuilder();
+            StringBuilder returnValue = new();
             if (ReadMethodName != null)
                 returnValue.Append($"-r {ReadMethodName} ");
             if (WriteMethodName != null)

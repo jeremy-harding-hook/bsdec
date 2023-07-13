@@ -453,3 +453,4 @@ $RECYCLE.BIN/
 !.vscode/launch.json
 !.vscode/extensions.json
 /BsdecSchemaGen/Properties/launchSettings.json
+/Bsdec/Properties/launchSettings.json

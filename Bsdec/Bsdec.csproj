@@ -31,6 +31,10 @@
 		<Content Include="bsdec.ico" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<ProjectReference Include="..\BsdecCore\BsdecCore.csproj" />
+	</ItemGroup>
+
 	<Target Name="PostPublish" AfterTargets="Publish">
 		<Exec Command="echo post-publish action: renaming executables" />
 		<Move Condition="'$(Configuration)'=='ReleaseLinux'" SourceFiles="$(PublishDir)\Bsdec" DestinationFiles="$(PublishDir)\bsdec" />

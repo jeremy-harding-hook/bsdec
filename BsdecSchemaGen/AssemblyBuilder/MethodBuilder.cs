@@ -131,6 +131,36 @@ namespace BsdecSchemaGen.AssemblyBuilder
                 methodCopy.Body.ExceptionHandlers.Add(handler);
             }
 
+            if (method.IsGetter || method.IsSetter)
+            {
+                PropertyDefinition? property = method.DeclaringType.Properties.FirstOrDefault(x => x.SetMethod == method || x.GetMethod == method);
+                if (property != null)
+                {
+                    PropertyDefinition? propertyCopy = methodCopy.DeclaringType.Properties.FirstOrDefault(x => x.Name == property.Name);
+                    if (propertyCopy == null)
+                    {
+                        TypeReference propertyType = property.SetMethod == method ? methodCopy.Parameters.First().ParameterType : methodCopy.ReturnType;
+                        propertyCopy = new(property.Name, property.Attributes, propertyType);
+                        methodCopy.DeclaringType.Properties.Add(propertyCopy);
+                    }
+                    if (property.SetMethod == method)
+                    {
+                        propertyCopy.SetMethod = methodCopy;
+                    }
+                    else
+                    {
+                        propertyCopy.GetMethod = methodCopy;
+                    }
+                }
+            }
+
+            CustomAttribute? compilerGeneraterAttribute = method.CustomAttributes.FirstOrDefault(x => x.AttributeType.FullName == "System.Runtime.CompilerServices.CompilerGeneratedAttribute");
+            if (compilerGeneraterAttribute != null)
+            {
+                MethodReference attributeConstructor = newModule.ImportReference(compilerGeneraterAttribute.Constructor);
+                methodCopy.CustomAttributes.Add(new CustomAttribute(attributeConstructor));
+            }
+
             return methodCopy;
         }
 
