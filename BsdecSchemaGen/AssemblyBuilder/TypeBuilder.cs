@@ -3,9 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Mono.Cecil.Rocks;
-using Mono.Cecil.Cil;
-using BsdecCore;
-using System.Text.Json.Serialization.Metadata;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
