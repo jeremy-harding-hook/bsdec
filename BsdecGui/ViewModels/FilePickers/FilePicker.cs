@@ -28,7 +28,7 @@ namespace BsdecGui.ViewModels.FilePickers
             OpenPicker();
         }
 
-        protected abstract void OpenPicker();
+        public abstract Task OpenPicker();
 
         protected async Task<PickerOptions> SetBasicOptions(PickerOptions options)
         {

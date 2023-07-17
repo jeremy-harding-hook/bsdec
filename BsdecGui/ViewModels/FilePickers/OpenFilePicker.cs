@@ -1,5 +1,6 @@
 ﻿using Avalonia.Platform.Storage;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using static BsdecGui.Logging;
 
 namespace BsdecGui.ViewModels.FilePickers
@@ -8,7 +9,7 @@ namespace BsdecGui.ViewModels.FilePickers
     {
         public OpenFilePicker(IStorageProvider storageProvider) : base(storageProvider) { }
 
-        protected override async void OpenPicker()
+        public override async Task OpenPicker()
         {
             Log.Debug("Browsing for file to open...");
             FilePickerOpenOptions options = new()

@@ -12,7 +12,7 @@ using static BsdecGui.Logging;
 
 namespace BsdecGui.ViewModels
 {
-    internal class SchemaGen : ViewModelBase
+    internal class SchemaGen : ErrorViewModel
     {
         #region view-bound properties
         private string? topLevelClassName;
@@ -57,13 +57,6 @@ namespace BsdecGui.ViewModels
             private set => this.RaiseAndSetIfChanged(ref output, value);
         }
 
-        private string errors = string.Empty;
-        public string Errors
-        {
-            get => errors;
-            private set => this.RaiseAndSetIfChanged(ref errors, value);
-        }
-
         private int errorCaretIndex;
         public int ErrorCaretIndex
         {
@@ -82,19 +75,26 @@ namespace BsdecGui.ViewModels
         public OpenFilePicker AssemblyFilePicker { get; }
         public SaveFilePicker OutputFilePicker { get; }
 
-        private readonly Window? mainWindow = null;
+        public OpenFilePicker SchemaFilePicker { get; }
+        public OpenFilePicker ImportFilePicker { get; }
+        public SaveFilePicker ExportFilePicker { get; }
+        public SaveFilePicker JsonFilePicker { get; }
+        public SaveFilePicker XmlFilePicker { get; }
 
-        private readonly FilePickerFileType bsdecFileType = new("Bsdec Fileformat Description File")
-        {
-            Patterns = new[] { "*.dll" },
-            MimeTypes = new[] { "application/x-msdownload" }
-            // TODO: Figure out how the Apple filetype thing is supposed to be done.
-        };
+        private readonly Window? mainWindow = null;
 
         public SchemaGen(IStorageProvider storageProvider, Window? mainWindow)
         {
             AssemblyFilePicker = new OpenFilePicker(storageProvider);
-            OutputFilePicker = new SaveFilePicker(storageProvider, "*.dll", bsdecFileType);
+            OutputFilePicker = new SaveFilePicker(storageProvider, "*.dll", AdditionalFileTypes.BsdecFileType);
+
+            SchemaFilePicker = new OpenFilePicker(storageProvider);
+
+            ImportFilePicker = new OpenFilePicker(storageProvider);
+            ExportFilePicker = new SaveFilePicker(storageProvider, "*.*", FilePickerFileTypes.All);
+            JsonFilePicker = new SaveFilePicker(storageProvider, "*.json", AdditionalFileTypes.XmlFileType);
+            XmlFilePicker = new SaveFilePicker(storageProvider, "*.xml", AdditionalFileTypes.JsonFileType);
+            
             this.mainWindow = mainWindow;
         }
 
@@ -133,9 +133,8 @@ namespace BsdecGui.ViewModels
                     
                     generator.OnGenerationCommenced += Generator_OnGenerationCommenced;
                     generator.OnGenerationCompleted += Generator_OnGenerationCompleted;
-                    generator.OnErrorRecieved += Generator_OnErrorRecieved;
+                    generator.OnErrorRecieved += OnErrorRecieved;
 
-                    Output = string.Empty;
                     Errors = string.Empty;
 
                     generator.Start();
@@ -182,12 +181,6 @@ namespace BsdecGui.ViewModels
                 Log.Error(ex, "Unhandled exception caught in {0}.{1}", nameof(SchemaGen), nameof(Generator_OnGenerationCompleted));
             }
         }
-
-        private void Generator_OnErrorRecieved(object? sender, StringOutputEventArgs e)
-        {
-            Errors += e.DataOut;
-        }
-
 
         CancellationTokenSource killConfermationCancellation = new();
         private async void IfDesiredStopGenerationAsync()
