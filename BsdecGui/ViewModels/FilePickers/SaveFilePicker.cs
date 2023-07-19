@@ -7,10 +7,10 @@ namespace BsdecGui.ViewModels.FilePickers
 {
     internal class SaveFilePicker : FilePicker
     {
-        private readonly string defaultExtension;
+        private readonly string? defaultExtension;
         readonly List<FilePickerFileType> allowedFileTypes = new();
 
-        public SaveFilePicker(IStorageProvider storageProvider, string defaultExtension, FilePickerFileType? defaultFileType) : base(storageProvider)
+        public SaveFilePicker(IStorageProvider storageProvider, string? defaultExtension, FilePickerFileType? defaultFileType) : base(storageProvider)
         {
             this.defaultExtension = defaultExtension;
             if (defaultFileType != null)
@@ -39,12 +39,13 @@ namespace BsdecGui.ViewModels.FilePickers
             Log.Debug("No file picked.");
         }
 
-        public async void OpenPickerWithFileOpen()
+        public async Task OpenPickerWithFileOpen()
         {
             Log.Debug("Browsing for file to open...");
             FilePickerOpenOptions options = new()
             {
-                AllowMultiple = false
+                AllowMultiple = false,
+                FileTypeFilter = allowedFileTypes
             };
             await SetBasicOptions(options);
             IReadOnlyList<IStorageFile> picks = await storageProvider.OpenFilePickerAsync(options);

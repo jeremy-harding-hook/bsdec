@@ -6,6 +6,7 @@ using BsdecGui.ViewModels.FilePickers;
 using BsdecGui.Views;
 using ReactiveUI;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using static BsdecGui.Logging;
@@ -57,13 +58,6 @@ namespace BsdecGui.ViewModels
             private set => this.RaiseAndSetIfChanged(ref output, value);
         }
 
-        private int errorCaretIndex;
-        public int ErrorCaretIndex
-        {
-            get => errorCaretIndex;
-            set => this.RaiseAndSetIfChanged(ref errorCaretIndex, value);
-        }
-
         private IImmutableSolidColorBrush buttonBackground = Brushes.Green;
         public IImmutableSolidColorBrush ButtonBackground
         {
@@ -88,13 +82,13 @@ namespace BsdecGui.ViewModels
             AssemblyFilePicker = new OpenFilePicker(storageProvider);
             OutputFilePicker = new SaveFilePicker(storageProvider, "*.dll", AdditionalFileTypes.BsdecFileType);
 
-            SchemaFilePicker = new OpenFilePicker(storageProvider);
+            SchemaFilePicker = new OpenFilePicker(storageProvider, new List<FilePickerFileType>() { AdditionalFileTypes.BsdecFileType });
 
             ImportFilePicker = new OpenFilePicker(storageProvider);
-            ExportFilePicker = new SaveFilePicker(storageProvider, "*.*", FilePickerFileTypes.All);
-            JsonFilePicker = new SaveFilePicker(storageProvider, "*.json", AdditionalFileTypes.XmlFileType);
-            XmlFilePicker = new SaveFilePicker(storageProvider, "*.xml", AdditionalFileTypes.JsonFileType);
-            
+            ExportFilePicker = new SaveFilePicker(storageProvider, "*.*", null);
+            JsonFilePicker = new SaveFilePicker(storageProvider, "*.json", AdditionalFileTypes.JsonFileType);
+            XmlFilePicker = new SaveFilePicker(storageProvider, "*.xml", AdditionalFileTypes.XmlFileType);
+
             this.mainWindow = mainWindow;
         }
 
@@ -130,7 +124,7 @@ namespace BsdecGui.ViewModels
                     }
                     string outputPath = string.IsNullOrWhiteSpace(OutputFilePicker.Path) ? Path.GetTempFileName() : OutputFilePicker.Path;
                     generator = new(AssemblyFilePicker.Path, outputPath, TopLevelClassName, ReadMethodName, WriteMethodName);
-                    
+
                     generator.OnGenerationCommenced += Generator_OnGenerationCommenced;
                     generator.OnGenerationCompleted += Generator_OnGenerationCompleted;
                     generator.OnErrorRecieved += OnErrorRecieved;
@@ -162,9 +156,13 @@ namespace BsdecGui.ViewModels
         private void Generator_OnGenerationCompleted(object? sender, EventArgs e)
         {
             // TODO: pass generator.OutputPath to the loader that the rest of the program uses.
-            // TODO: decompile and add as output the code
             if (generator!.ExitCode == 0)
-                Errors += $"The output file can be found in {Path.GetFullPath(generator!.OutputPath)}\n";
+            {
+                if (LoadSchema)
+                    SchemaFilePicker.Path = generator!.OutputPath;
+                else if (!string.IsNullOrWhiteSpace(OutputFilePicker.Path))
+                    Errors += $"The output file can be found in {Path.GetFullPath(generator!.OutputPath)}\n";
+            }
             if (generator!.ExitCode == 4)
                 Errors += "Process killed.\n";
 
@@ -174,7 +172,6 @@ namespace BsdecGui.ViewModels
                 killConfermationCancellation.Cancel();
                 ButtonText = "Run";
                 ButtonBackground = Brushes.Green;
-                ErrorCaretIndex = Errors.Length - 1;
             }
             catch (Exception ex)
             {

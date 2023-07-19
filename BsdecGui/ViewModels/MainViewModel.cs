@@ -7,8 +7,8 @@ namespace BsdecGui.ViewModels
     {
         private readonly Session session;
         public SchemaGen SchemaGen { get; }
-        public FormatContextViewModel JsonEditor { get; }
-        public FormatContextViewModel XmlEditor { get; }
+        public FormatEditor JsonEditor { get; }
+        public FormatEditor XmlEditor { get; }
 
         public MainViewModel(IStorageProvider storageProvider, Window? mainWindow = null) { 
             SchemaGen = new SchemaGen(storageProvider, mainWindow);

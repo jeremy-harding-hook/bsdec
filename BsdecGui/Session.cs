@@ -1,5 +1,4 @@
-﻿using Avalonia.Platform.Storage;
-using BsdecGui.Outsourcing;
+﻿using BsdecGui.Outsourcing;
 using BsdecGui.ViewModels;
 using BsdecGui.ViewModels.FilePickers;
 using System;
@@ -7,14 +6,13 @@ using System.Collections.Generic;
 using System.IO;
 using static BsdecGui.Outsourcing.Bsdec;
 using static BsdecGui.Logging;
-using BsdecGui.Views;
 
 namespace BsdecGui
 {
     internal class Session
     {
-        public FormatContextViewModel JsonContext { get; }
-        public FormatContextViewModel XmlContext { get; }
+        public FormatEditor JsonContext { get; }
+        public FormatEditor XmlContext { get; }
         public SchemaGen SchemaGen { get; }
 
         public Session(SchemaGen schemaGen)
@@ -24,83 +22,116 @@ namespace BsdecGui
             XmlContext = BuildFormatContextViewModel(Formats.Xml, SchemaGen.XmlFilePicker);
         }
 
-        private void SyncEditorPanes(Formats sourceFormat, Formats? currentPane = null, bool refreshSource = false, bool exportBinary = false)
+        private async void SyncEditorPanes(Formats sourceFormat, Formats? currentPane = null, bool refreshSource = false, bool exportBinary = false)
         {
             Formats normalisedCurrentPane = currentPane ?? sourceFormat;
             ErrorViewModel errorViewModel = GetErrorViewModelFromContext(normalisedCurrentPane);
             errorViewModel.ClearErrors();
-
-            string? input = null;
-            List<Formats> destinationFormats = new();
-            if (refreshSource)
+            try
             {
-                destinationFormats.Add(sourceFormat);
-            }
-            if (exportBinary)
-            {
-                destinationFormats.Add(Formats.Binary);
-            }
-            switch (sourceFormat)
-            {
-                case Formats.Json:
-                    input = JsonContext.Text;
-                    destinationFormats.Add(Formats.Xml);
-                    break;
-                case Formats.Xml:
-                    input = XmlContext.Text;
-                    destinationFormats.Add(Formats.Json);
-                    break;
-                case Formats.Binary:
-                    if (string.IsNullOrEmpty(SchemaGen.ImportFilePicker.Path))
-                    {
-                        errorViewModel.AddError("No schema file is defined. Please set it in the \"Configuration\" tab.");
-                        return;
-                    }
-                    input = File.ReadAllText(SchemaGen.ImportFilePicker.Path);
-                    destinationFormats.Add(Formats.Xml);
-                    destinationFormats.Add(Formats.Json);
-                    break;
-            }
-
-            input ??= string.Empty;
-            foreach (Formats format in destinationFormats)
-            {
-                StreamWriter? outputWriter = null;
-                try
+                if (string.IsNullOrEmpty(SchemaGen.SchemaFilePicker.Path))
                 {
-                    Bsdec bsdec = new(input, sourceFormat, format);
-                    bsdec.OnErrorRecieved += errorViewModel.OnErrorRecieved;
+                    errorViewModel.AddError("No schema file is defined. Please set it in the \"Configuration\" tab.");
+                    return;
+                }
+                string schemaPath = SchemaGen.SchemaFilePicker.Path;
 
-                    switch (format)
-                    {
-                        case Formats.Json:
-                            JsonContext.Text = string.Empty;
-                            bsdec.OnOutputRecieved += JsonContext.Bsdec_OnOutputRecieved;
-                            break;
-                        case Formats.Xml:
-                            XmlContext.Text = string.Empty;
-                            bsdec.OnOutputRecieved += XmlContext.Bsdec_OnOutputRecieved;
-                            break;
-                        case Formats.Binary:
-                            if (string.IsNullOrEmpty(SchemaGen.ExportFilePicker.Path))
+                string? input = null;
+                List<Formats> destinationFormats = new();
+                if (refreshSource)
+                {
+                    destinationFormats.Add(sourceFormat);
+                }
+                if (exportBinary)
+                {
+                    destinationFormats.Add(Formats.Binary);
+                }
+                switch (sourceFormat)
+                {
+                    case Formats.Json:
+                        input = JsonContext.Text;
+                        destinationFormats.Add(Formats.Xml);
+                        break;
+                    case Formats.Xml:
+                        input = XmlContext.Text;
+                        destinationFormats.Add(Formats.Json);
+                        break;
+                    case Formats.Binary:
+                        if (string.IsNullOrEmpty(SchemaGen.ImportFilePicker.Path))
+                        {
+                            await SchemaGen.ImportFilePicker.OpenPicker();
+                            if (string.IsNullOrEmpty(SchemaGen.ImportFilePicker.Path))
                             {
-                                errorViewModel.AddError("No schema file is defined. Please set it in the \"Configuration\" tab.");
-                                continue;
+                                errorViewModel.AddError("No import source is defined. Please set it in the \"Configuration\" tab.");
+                                return;
                             }
-                            bsdec.OnProcessCompleted += (sender, e) => { outputWriter?.Dispose(); };
-                            outputWriter = new(SchemaGen.ExportFilePicker.Path);
-                            bsdec.OnOutputRecieved += (sender, e) => { outputWriter.WriteLine(e.DataOut); };
-                            break;
-                    }
-                    bsdec.Start();
+                        }
+                        input = File.ReadAllText(SchemaGen.ImportFilePicker.Path);
+                        destinationFormats.Add(Formats.Xml);
+                        destinationFormats.Add(Formats.Json);
+                        break;
                 }
-                catch (Exception ex)
+
+                input ??= string.Empty;
+                List<Bsdec> bsdecInstances = new();
+
+                foreach (Formats format in destinationFormats)
                 {
-                    errorViewModel.AddError(ex.Message);
-                    Log.Error(ex);
+                    StreamWriter? outputWriter = null;
+                    try
+                    {
+                        Bsdec bsdec = new(input, schemaPath, sourceFormat, format);
+
+                        switch (format)
+                        {
+                            case Formats.Json:
+                                bsdec.OnProcessCompleted += JsonContext.Bsdec_OnProcessCompleted;
+                                break;
+                            case Formats.Xml:
+                                bsdec.OnProcessCompleted += XmlContext.Bsdec_OnProcessCompleted;
+                                break;
+                            case Formats.Binary:
+                                if (string.IsNullOrEmpty(SchemaGen.ExportFilePicker.Path))
+                                {
+                                    await SchemaGen.ExportFilePicker.OpenPicker();
+                                    if (string.IsNullOrEmpty(SchemaGen.ExportFilePicker.Path))
+                                    {
+                                        errorViewModel.AddError("No export file is defined. Please set it in the \"Configuration\" tab.");
+                                        continue;
+                                    }
+                                }
+                                bsdec.OnProcessCompleted += (sender, e) =>
+                                {
+                                    using (outputWriter = new(SchemaGen.ExportFilePicker.Path))
+                                    {
+                                        outputWriter.WriteLineAsync(e.Stdout);
+                                    }
+                                };
+                                break;
+                        }
+                        bsdec.OnProcessCompleted += (sender, e) =>
+                        {
+                            if (!string.IsNullOrWhiteSpace(e.Stderr))
+                            {
+                                errorViewModel.AddError(e.Stderr);
+                            }
+                            bsdecInstances.Remove((Bsdec)sender!);
+                        };
+                        bsdec.Start();
+                        bsdecInstances.Add(bsdec);
+                    }
+                    catch (Exception ex)
+                    {
+                        errorViewModel.AddError(ex.Message);
+                        Log.Error(ex);
+                    }
                 }
             }
-
+            catch (Exception ex)
+            {
+                errorViewModel.AddError(ex.Message);
+                Log.Error(ex);
+            }
         }
 
         private async void ImportBinary(Formats currentPane)
@@ -115,9 +146,9 @@ namespace BsdecGui
             SyncEditorPanes(currentPane, null, false, true);
         }
 
-        private FormatContextViewModel BuildFormatContextViewModel(Formats format, SaveFilePicker filePicker)
+        private FormatEditor BuildFormatContextViewModel(Formats format, SaveFilePicker filePicker)
         {
-            return new FormatContextViewModel()
+            return new FormatEditor()
             {
                 Sync = () => SyncEditorPanes(format),
                 SaveFilePicker = filePicker,

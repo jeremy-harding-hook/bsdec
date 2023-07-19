@@ -1,0 +1,66 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="clr-namespace:BsdecGui.ViewModels"
+			 xmlns:views="clr-namespace:BsdecGui.Views"
+			 mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+			 x:DataType="vm:FormatEditor"
+			 x:Class="BsdecGui.Views.FormatEditorView">
+	<UserControl.Styles>
+		<Style Selector="Grid > Button">
+			<Setter Property="FontWeight" Value="Bold"/>
+			<Setter Property="HorizontalAlignment" Value="Stretch"/>
+			<Setter Property="HorizontalContentAlignment" Value="Center"/>
+		</Style>
+	</UserControl.Styles>
+	
+	<Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,*">
+		
+		<Panel x:Name="ControlGridPanel" Grid.Column="0" Grid.Row="0">
+			<Grid x:Name="ControlGrid" ColumnDefinitions="150,150" RowDefinitions="Auto,Auto,Auto,Auto" Margin="0 10 10 20">
+				<Button Grid.Column="0" Grid.Row="0" Content="Open..." Command="{Binding Open}" Foreground="HotPink" Background="Blue"/>
+				<Button Grid.Column="1" Grid.Row="0" Content="Save as..." Command="{Binding SaveAs}" Foreground="Magenta" Background="Blue"/>
+				<Button Grid.Column="0" Grid.Row="1" Content="Import..." Command="{Binding Import}" Foreground="HotPink" Background="DarkGoldenrod"/>
+				<Button Grid.Column="1" Grid.Row="1" Content="Export as..." Command="{Binding ExportAs}" Foreground="Magenta" Background="DarkGoldenrod"/>
+				<Button Grid.Column="0" Grid.Row="2" Content="Reimport" Command="{Binding Reimport}" Foreground="Crimson" Background="Goldenrod"/>
+				<Button Grid.Column="1" Grid.Row="2" Content="Export" Command="{Binding Export}" Foreground="Purple" Background="Goldenrod"/>
+				<Button Grid.Column="0" Grid.Row="3" Content="Validate" Command="{Binding Validate}" Foreground="Crimson" Background="MediumSeaGreen"/>
+				<Button Grid.Column="1" Grid.Row="3" Content="Save" Command="{Binding Save}" Foreground="Purple" Background="CornflowerBlue"/>
+			</Grid>
+		</Panel>
+
+		<Panel x:Name="TextBoxPanel"
+			Grid.Column="1"
+			Grid.Row="0"
+			Grid.RowSpan="2"
+			Margin="0 10 0 10">
+			<TextBox
+				AcceptsReturn="True"
+				TextWrapping="Wrap"
+				HorizontalAlignment="Stretch"
+				VerticalAlignment="Stretch"
+				Watermark="(No data)"
+				Text="{Binding Text}"
+				/>
+		</Panel>
+
+		<Panel x:Name="ErrorBoxPanel"
+			Grid.Column="0"
+			Grid.Row="1"
+			Margin="0 0 10 10">
+			<TextBox
+				AcceptsReturn="True"
+				TextWrapping="Wrap"
+				HorizontalAlignment="Stretch"
+				VerticalAlignment="Stretch"
+				Watermark="No errors thus far..."
+				IsReadOnly="True"
+				Text="{Binding Errors}"
+				Foreground="Firebrick"
+				MaxWidth="{Binding #ControlGrid.Bounds.Width}"
+				CaretIndex="{Binding ErrorCaretIndex}"/>
+		</Panel>
+		
+	</Grid>
+</UserControl>

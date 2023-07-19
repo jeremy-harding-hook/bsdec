@@ -9,7 +9,7 @@ namespace BsdecGui.ViewModels.FilePickers
 {
     internal static class AdditionalFileTypes
     {
-        public static readonly FilePickerFileType BsdecFileType = new("Bsdec Fileformat Description File")
+        public static readonly FilePickerFileType BsdecFileType = new("Bsdec Schema File")
         {
             Patterns = new[] { "*.dll" },
             MimeTypes = new[] { "application/x-msdownload" }
