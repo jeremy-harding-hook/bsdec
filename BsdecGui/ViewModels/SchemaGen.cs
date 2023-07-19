@@ -6,13 +6,14 @@ using BsdecGui.ViewModels.FilePickers;
 using BsdecGui.Views;
 using ReactiveUI;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using static BsdecGui.Logging;
 
 namespace BsdecGui.ViewModels
 {
-    internal class SchemaGen : ViewModelBase
+    internal class SchemaGen : ErrorViewModel
     {
         #region view-bound properties
         private string? topLevelClassName;
@@ -57,20 +58,6 @@ namespace BsdecGui.ViewModels
             private set => this.RaiseAndSetIfChanged(ref output, value);
         }
 
-        private string errors = string.Empty;
-        public string Errors
-        {
-            get => errors;
-            private set => this.RaiseAndSetIfChanged(ref errors, value);
-        }
-
-        private int errorCaretIndex;
-        public int ErrorCaretIndex
-        {
-            get => errorCaretIndex;
-            set => this.RaiseAndSetIfChanged(ref errorCaretIndex, value);
-        }
-
         private IImmutableSolidColorBrush buttonBackground = Brushes.Green;
         public IImmutableSolidColorBrush ButtonBackground
         {
@@ -82,19 +69,26 @@ namespace BsdecGui.ViewModels
         public OpenFilePicker AssemblyFilePicker { get; }
         public SaveFilePicker OutputFilePicker { get; }
 
-        private readonly Window? mainWindow = null;
+        public OpenFilePicker SchemaFilePicker { get; }
+        public OpenFilePicker ImportFilePicker { get; }
+        public SaveFilePicker ExportFilePicker { get; }
+        public SaveFilePicker JsonFilePicker { get; }
+        public SaveFilePicker XmlFilePicker { get; }
 
-        private readonly FilePickerFileType bsdecFileType = new("Bsdec Fileformat Description File")
-        {
-            Patterns = new[] { "*.dll" },
-            MimeTypes = new[] { "application/x-msdownload" }
-            // TODO: Figure out how the Apple filetype thing is supposed to be done.
-        };
+        private readonly Window? mainWindow = null;
 
         public SchemaGen(IStorageProvider storageProvider, Window? mainWindow)
         {
             AssemblyFilePicker = new OpenFilePicker(storageProvider);
-            OutputFilePicker = new SaveFilePicker(storageProvider, "*.dll", bsdecFileType);
+            OutputFilePicker = new SaveFilePicker(storageProvider, "*.dll", AdditionalFileTypes.BsdecFileType);
+
+            SchemaFilePicker = new OpenFilePicker(storageProvider, new List<FilePickerFileType>() { AdditionalFileTypes.BsdecFileType });
+
+            ImportFilePicker = new OpenFilePicker(storageProvider);
+            ExportFilePicker = new SaveFilePicker(storageProvider, "*.*", null);
+            JsonFilePicker = new SaveFilePicker(storageProvider, "*.json", AdditionalFileTypes.JsonFileType);
+            XmlFilePicker = new SaveFilePicker(storageProvider, "*.xml", AdditionalFileTypes.XmlFileType);
+
             this.mainWindow = mainWindow;
         }
 
@@ -130,12 +124,11 @@ namespace BsdecGui.ViewModels
                     }
                     string outputPath = string.IsNullOrWhiteSpace(OutputFilePicker.Path) ? Path.GetTempFileName() : OutputFilePicker.Path;
                     generator = new(AssemblyFilePicker.Path, outputPath, TopLevelClassName, ReadMethodName, WriteMethodName);
-                    
+
                     generator.OnGenerationCommenced += Generator_OnGenerationCommenced;
                     generator.OnGenerationCompleted += Generator_OnGenerationCompleted;
-                    generator.OnErrorRecieved += Generator_OnErrorRecieved;
+                    generator.OnErrorRecieved += OnErrorRecieved;
 
-                    Output = string.Empty;
                     Errors = string.Empty;
 
                     generator.Start();
@@ -163,9 +156,13 @@ namespace BsdecGui.ViewModels
         private void Generator_OnGenerationCompleted(object? sender, EventArgs e)
         {
             // TODO: pass generator.OutputPath to the loader that the rest of the program uses.
-            // TODO: decompile and add as output the code
             if (generator!.ExitCode == 0)
-                Errors += $"The output file can be found in {Path.GetFullPath(generator!.OutputPath)}\n";
+            {
+                if (LoadSchema)
+                    SchemaFilePicker.Path = generator!.OutputPath;
+                else if (!string.IsNullOrWhiteSpace(OutputFilePicker.Path))
+                    Errors += $"The output file can be found in {Path.GetFullPath(generator!.OutputPath)}\n";
+            }
             if (generator!.ExitCode == 4)
                 Errors += "Process killed.\n";
 
@@ -175,19 +172,12 @@ namespace BsdecGui.ViewModels
                 killConfermationCancellation.Cancel();
                 ButtonText = "Run";
                 ButtonBackground = Brushes.Green;
-                ErrorCaretIndex = Errors.Length - 1;
             }
             catch (Exception ex)
             {
                 Log.Error(ex, "Unhandled exception caught in {0}.{1}", nameof(SchemaGen), nameof(Generator_OnGenerationCompleted));
             }
         }
-
-        private void Generator_OnErrorRecieved(object? sender, StringOutputEventArgs e)
-        {
-            Errors += e.DataOut;
-        }
-
 
         CancellationTokenSource killConfermationCancellation = new();
         private async void IfDesiredStopGenerationAsync()

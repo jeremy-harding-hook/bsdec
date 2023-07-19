@@ -12,7 +12,7 @@ namespace BsdecGui.ViewModels.FilePickers
         public string? Path
         {
             get => path;
-            protected set => this.RaiseAndSetIfChanged(ref path, value);
+            set => this.RaiseAndSetIfChanged(ref path, value);
         }
 
         protected readonly IStorageProvider storageProvider;
@@ -28,7 +28,7 @@ namespace BsdecGui.ViewModels.FilePickers
             OpenPicker();
         }
 
-        protected abstract void OpenPicker();
+        public abstract Task OpenPicker();
 
         protected async Task<PickerOptions> SetBasicOptions(PickerOptions options)
         {

@@ -14,14 +14,14 @@
 	</Design.DataContext>
 
 	<TabControl>
-		<TabItem Header="Schema generation" >
+		<TabItem Header="Configuration">
 			<views:SchemaGenView DataContext="{Binding SchemaGen}"/>
 		</TabItem>
-		<TabItem Header="Import/Export">
-			<TextBlock Text="This page will be for importing/exporting savefiles in various formats."/>
+		<TabItem Header="Json">
+			<views:FormatEditorView DataContext="{Binding JsonEditor}"/>
 		</TabItem>
-		<TabItem Header="Direct editing">
-			<TextBlock Text="This page will allow the user to carry out edits without an external program"/>
+		<TabItem Header="Xml">
+			<views:FormatEditorView DataContext="{Binding XmlEditor}"/>
 		</TabItem>
 	</TabControl>
 </UserControl>

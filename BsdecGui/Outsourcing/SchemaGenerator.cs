@@ -1,11 +1,6 @@
-﻿using Avalonia;
-using BsdecGui.Views;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Diagnostics;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace BsdecGui.Outsourcing
 {
@@ -84,7 +79,7 @@ namespace BsdecGui.Outsourcing
         private void Process_ErrorDataReceived(object sender, DataReceivedEventArgs e)
         {
             OnErrorRecieved?.Invoke(this, new StringOutputEventArgs { DataOut = e.Data + '\n' });
-            Logging.Log.Info($"Output from BsdecSchemaGen: {e.Data}");
+            Logging.Log.Warn($"Error from BsdecSchemaGen: {e.Data}");
         }
 
         private void Process_Exited(object? sender, EventArgs e)

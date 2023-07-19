@@ -1,15 +1,16 @@
 ﻿using Avalonia.Platform.Storage;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using static BsdecGui.Logging;
 
 namespace BsdecGui.ViewModels.FilePickers
 {
-    internal sealed class SaveFilePicker : FilePicker
+    internal class SaveFilePicker : FilePicker
     {
-        private readonly string defaultExtension;
+        private readonly string? defaultExtension;
         readonly List<FilePickerFileType> allowedFileTypes = new();
 
-        public SaveFilePicker(IStorageProvider storageProvider, string defaultExtension, FilePickerFileType? defaultFileType) : base(storageProvider)
+        public SaveFilePicker(IStorageProvider storageProvider, string? defaultExtension, FilePickerFileType? defaultFileType) : base(storageProvider)
         {
             this.defaultExtension = defaultExtension;
             if (defaultFileType != null)
@@ -19,7 +20,7 @@ namespace BsdecGui.ViewModels.FilePickers
             allowedFileTypes.Add(FilePickerFileTypes.All);
         }
 
-        protected override async void OpenPicker()
+        public override async Task OpenPicker()
         {
             Log.Debug("Browsing for file to save...");
             FilePickerSaveOptions options = new()
@@ -33,6 +34,24 @@ namespace BsdecGui.ViewModels.FilePickers
             if (pick != null)
             {
                 Path = pick.TryGetLocalPath() ?? pick.Path.ToString();
+                Log.Debug("File picked: {0}", Path);
+            }
+            Log.Debug("No file picked.");
+        }
+
+        public async Task OpenPickerWithFileOpen()
+        {
+            Log.Debug("Browsing for file to open...");
+            FilePickerOpenOptions options = new()
+            {
+                AllowMultiple = false,
+                FileTypeFilter = allowedFileTypes
+            };
+            await SetBasicOptions(options);
+            IReadOnlyList<IStorageFile> picks = await storageProvider.OpenFilePickerAsync(options);
+            if (picks.Count > 0)
+            {
+                Path = picks[0].TryGetLocalPath() ?? picks[0]?.Path.ToString();
                 Log.Debug("File picked: {0}", Path);
             }
             Log.Debug("No file picked.");

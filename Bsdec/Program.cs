@@ -1,6 +1,7 @@
 ﻿using Bsdec.Functions;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Text.RegularExpressions;
 
@@ -33,13 +34,11 @@ namespace Bsdec
             }
         }
 
-        static int HandleArgs(string[] args)
-        {
-            Option helpOption = new("help", 'h');
-            Option inputOption = new("in", 'i');
-            Option outputOption = new("out", 'o');
+        static readonly Option helpOption = new("help", 'h');
+        static readonly Option inputOption = new("in", 'i');
+        static readonly Option outputOption = new("out", 'o');
 
-            Dictionary<Decoder.Format, Option> formatOptions = new()
+        static readonly Dictionary<Decoder.Format, Option> formatOptions = new()
             {
                 {Decoder.Format.Auto, new("auto", 'a')},
                 {Decoder.Format.Binary, new("binary", 'b')},
@@ -47,19 +46,26 @@ namespace Bsdec
                 {Decoder.Format.Xml, new("xml", 'x')}
             };
 
-            List<Option> options = new()
+        static readonly List<Option> options;
+
+        static Decoder.Format inputFormat = Decoder.Format.Auto;
+        static Decoder.Format outputFormat = Decoder.Format.Auto;
+
+        static Program()
+        {
+            options = new()
             {
                 helpOption,
                 inputOption,
                 outputOption,
             };
-
             options.AddRange(formatOptions.Values);
+        }
 
+        static int HandleArgs(string[] args)
+        {
             string? schemaFile = null;
-            Decoder.Format inputFormat = Decoder.Format.Auto;
-            Decoder.Format outputFormat = Decoder.Format.Auto;
-
+            
             Regex multiflagFinder = shortFlags();
             Regex longFlagFinder = longFlags();
             foreach (string arg in args)
@@ -70,6 +76,7 @@ namespace Bsdec
                     {
                         if (!TryMatchFlag(options, flag))
                             return FailHelpfully();
+                        CheckFormatOptions();
                     }
                 }
                 else if (longFlagFinder.IsMatch(arg))
@@ -98,23 +105,7 @@ namespace Bsdec
                     return FailHelpfully();
                 }
 
-                foreach (KeyValuePair<Decoder.Format, Option> option in formatOptions)
-                {
-                    if (option.Value.set)
-                    {
-                        option.Value.set = false;
-                        if (inputOption.set)
-                        {
-                            inputOption.set = false;
-                            inputFormat = option.Key;
-                        }
-                        else
-                        {
-                            outputOption.set = false;
-                            outputFormat = option.Key;
-                        }
-                    }
-                }
+                CheckFormatOptions();
             }
 
             if (helpOption.set)
@@ -174,6 +165,27 @@ namespace Bsdec
                 }
             }
             return false;
+        }
+
+        private static void CheckFormatOptions()
+        {
+            foreach (KeyValuePair<Decoder.Format, Option> option in formatOptions)
+            {
+                if (option.Value.set)
+                {
+                    option.Value.set = false;
+                    if (inputOption.set)
+                    {
+                        inputOption.set = false;
+                        inputFormat = option.Key;
+                    }
+                    else
+                    {
+                        outputOption.set = false;
+                        outputFormat = option.Key;
+                    }
+                }
+            }
         }
 
         class Option

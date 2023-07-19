@@ -5,7 +5,7 @@ namespace Bsdec.Functions
     {
         private static readonly string errorText =
             $"Usage: {Program.ProgramFileName} [options] schema_file\n\n" +
-            $"A tool for reading or writing a binary savefile using a schema dll" +
+            $"A tool for reading or writing a binary savefile using a schema dll\n" +
             $"which can be produced using the associated schema generator.\n\n" +
             $"Options:\n" +
             $"    -i input_format\n" +
