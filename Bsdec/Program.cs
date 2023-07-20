@@ -22,7 +22,6 @@
 using Bsdec.Functions;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Text.RegularExpressions;
 
@@ -56,6 +55,8 @@ namespace Bsdec
         }
 
         static readonly Option helpOption = new("help", 'h');
+        static readonly Option aboutOption = new("about", null);
+        static readonly Option licenseOption = new("license", null);
         static readonly Option inputOption = new("in", 'i');
         static readonly Option outputOption = new("out", 'o');
 
@@ -77,6 +78,8 @@ namespace Bsdec
             options = new()
             {
                 helpOption,
+                aboutOption,
+                licenseOption,
                 inputOption,
                 outputOption,
             };
@@ -132,6 +135,18 @@ namespace Bsdec
             if (helpOption.set)
             {
                 Help.ShowHelpText(false);
+                return 0;
+            }
+
+            if (aboutOption.set)
+            {
+                About.ShowAboutText();
+                return 0;
+            }
+
+            if (licenseOption.set)
+            {
+                License.ShowLicenseText();
                 return 0;
             }
 

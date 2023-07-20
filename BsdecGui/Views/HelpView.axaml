@@ -37,7 +37,7 @@
 				VerticalAlignment="Stretch"
 				xml:space="preserve"
 				Margin="0 0 0 10">
-___Getting started___
+   GETTING STARTED
 				
 BsdecGui is a graphical interface for the command-line utilities Bsdec and
 BsdecSchemaGen (on Linux these names are written in kebab-case). The name Bsdec
@@ -69,7 +69,7 @@ This seperation of concerns also holds true when using BsdecGui; you can omit
 the installation of either of the other programs if the related functionality
 is unneeded.
 
-___Schema generation___
+   SCHEMA GENERATION
 
 In BsdecGui, the schema generation can be carried out using the controls on the
 left-hand side and bottom of the "Configuration" pane. Here is a list of the
@@ -114,30 +114,30 @@ it out, you may find it helpful to decompile the generated schema file. This is
 really just a library containing pared-down copies of all the saved classes
 along with the save methods and anything else required. Additionally, the top-
 level class is marked with a BsdecToplevelSavefileClass attribute, and the top-
-level reader an writer methods are identified with BsdecReadMethod and
+level reader and writer methods are identified with BsdecReadMethod and
 BsdecWriteMethod attributes. These are defined in BsdecCore, so it's normal to
 get decompilation warnings due to that. These warnings might be removable if
 you convince your decompiler to reference the BsdecCore contained in either the
 Bsdec or the BsdecSchemaGen assembly.
 
-___Editor___
+   EDITOR
 				
 The editor panes are fairly self-explanitory. There is continuous syncing
 between the panes, but you can also force a sync with the "validate" button.
 This button additionally refreshes the current pane, so you may see that
-missing values have been added back in with default values for instance.
+missing fields have been added back in with default values for instance.
 
 "Save", "Save as" and "Open" all work as you might expect, saving the text in
 the current pane. Hence if you save in the json pane you save json, and if you
-save in the xml pane you save xml. That is why there are seperate locations
+save in the xml pane you save xml. That is why there are separate locations
 listed under the "Configuration" tab in the box on the right-hand side.
 
 "Import", "Reimport", "Export" and "Export as" export/import the binary
-savefile. Note that there are seperate directories for import and export. This
+savefile. Note that there are separate directories for import and export. This
 is to allow making multiple modifications on one base file, as well as making
 it easy to test and revert changes that did not have the desired effect.
 
-___Closing remarks___
+   CLOSING REMARKS
 				
 Logs can be found at C:\Users\username\AppData\Roaming\Bsdec\Logs on Windows
 or ~/.config/bsdec/logs on Linux.
@@ -154,7 +154,7 @@ I may eventually get around to implementing a requested feature.
 
 The recursive and largely functional architecture of Bsdec and BsdecSchemaGen
 make me think they would be much better written in F#, but as at the time of
-development I had yet to learn that language and wanted to do it quickly I
+development I had yet to learn it and wanted to get the program done quickly I
 opted to stick to C# instead. The architecture of BsdecGui could best be
 described as a mess; it wasn't really big enough to warrant proper MVVM or
 anything (no models, as all the heavy lifting is done by Bsdec).

@@ -23,7 +23,6 @@ using BsdecSchemaGen.Functions;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace BsdecSchemaGen
@@ -58,11 +57,15 @@ namespace BsdecSchemaGen
         static int HandleArgs(string[] args)
         {
             Option helpOption = new("help", 'h');
+            Option aboutOption = new("about", null);
+            Option licenseOption = new("license", null);
             Option readerOption = new("reader", 'r');
             Option writerOption = new("writer", 'w');
             List<Option> options = new()
             {
                 helpOption,
+                aboutOption,
+                licenseOption,
                 readerOption,
                 writerOption
             };
@@ -113,6 +116,24 @@ namespace BsdecSchemaGen
                 {
                     return FailHelpfully();
                 }
+            }
+
+            if (helpOption.set)
+            {
+                Help.ShowHelpText(false);
+                return 0;
+            }
+
+            if (aboutOption.set)
+            {
+                About.ShowAboutText();
+                return 0;
+            }
+
+            if (licenseOption.set)
+            {
+                License.ShowLicenseText();
+                return 0;
             }
 
             if (helpOption.set)

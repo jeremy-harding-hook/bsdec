@@ -44,6 +44,10 @@ namespace BsdecSchemaGen.Functions
             $"    -h\n" +
             $"    --help\n" +
             $"        Returns this help text.\n\n" +
+            $"    --about\n" +
+            $"        Displays a short about text.\n\n" +
+            $"    --license\n" +
+            $"        Displays the program's license\n\n" +
             $"Parameters:\n" +
             $"    class_name:\n" +
             $"        The name of the top-level class corresponding to the object being saved,\n" +
@@ -61,7 +65,7 @@ namespace BsdecSchemaGen.Functions
 
         public static void ShowHelpText(bool stderr)
         {
-            if(stderr)
+            if (stderr)
                 Console.Error.WriteLine(errorText);
             else
                 Console.WriteLine(errorText);
