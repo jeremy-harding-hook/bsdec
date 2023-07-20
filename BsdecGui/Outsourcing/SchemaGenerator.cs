@@ -32,6 +32,7 @@ namespace BsdecGui.Outsourcing
         {
             try
             {
+                // TODO: Start from the path the exe is in, not the working directory
 #if DEBUG
                 ProcessStartInfo startInfo = new($@"{Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)}\source\repos\Bsdec\bin\Release\win-x64\publish\{ShippedSchemaGenFilename}", BuildArgs())
 #else
