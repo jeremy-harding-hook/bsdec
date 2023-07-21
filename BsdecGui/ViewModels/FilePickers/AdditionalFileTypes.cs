@@ -34,7 +34,6 @@ namespace BsdecGui.ViewModels.FilePickers
         {
             Patterns = new[] { "*.dll" },
             MimeTypes = new[] { "application/x-msdownload" }
-            // TODO: Figure out how the Apple filetype thing is supposed to be done.
         };
 
         public static readonly FilePickerFileType JsonFileType = new("Json File")

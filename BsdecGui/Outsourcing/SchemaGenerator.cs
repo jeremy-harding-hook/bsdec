@@ -21,6 +21,7 @@
 
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Text;
 
 namespace BsdecGui.Outsourcing
@@ -33,6 +34,7 @@ namespace BsdecGui.Outsourcing
         public string? ReadMethodName { get; }
         public string? WriteMethodName { get; }
         public int ExitCode { get; private set; }
+        private readonly string schemaGenPath;
 #if RELEASELINUX
         private const string ShippedSchemaGenFilename = "bsdec-schema-gen";
 #else
@@ -46,6 +48,9 @@ namespace BsdecGui.Outsourcing
             TopLevelClassName = topLevelClassName;
             ReadMethodName = readMethodName;
             WriteMethodName = writeMethodName;
+            schemaGenPath = Path.Combine(
+                Directory.GetParent(typeof(SchemaGenerator).Assembly.Location)?.ToString() ?? string.Empty, 
+                ShippedSchemaGenFilename);
         }
         private Process? process;
 
@@ -53,11 +58,11 @@ namespace BsdecGui.Outsourcing
         {
             try
             {
-                // TODO: Start from the path the exe is in, not the working directory
 #if DEBUG
+                Logging.Log.Debug($"In production this would launch {schemaGenPath}, however the path is different in debug mode.");
                 ProcessStartInfo startInfo = new($@"{Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)}\source\repos\Bsdec\bin\Release\win-x64\publish\{ShippedSchemaGenFilename}", BuildArgs())
 #else
-                ProcessStartInfo startInfo = new(ShippedSchemaGenFilename, BuildArgs())
+                ProcessStartInfo startInfo = new(schemaGenPath, BuildArgs())
 #endif
                 {
                     RedirectStandardError = true,
@@ -106,7 +111,7 @@ namespace BsdecGui.Outsourcing
 
         private void Process_Exited(object? sender, EventArgs e)
         {
-            if(ExitCode == 0)
+            if (ExitCode == 0)
             {
                 ExitCode = process?.ExitCode ?? 0;
             }

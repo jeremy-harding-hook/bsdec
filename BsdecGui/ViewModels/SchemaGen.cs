@@ -176,7 +176,6 @@ namespace BsdecGui.ViewModels
 
         private void Generator_OnGenerationCompleted(object? sender, EventArgs e)
         {
-            // TODO: pass generator.OutputPath to the loader that the rest of the program uses.
             if (generator!.ExitCode == 0)
             {
                 if (LoadSchema)

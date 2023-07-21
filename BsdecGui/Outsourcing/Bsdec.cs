@@ -21,6 +21,7 @@
 
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Text;
 
 namespace BsdecGui.Outsourcing
@@ -33,6 +34,7 @@ namespace BsdecGui.Outsourcing
         private readonly Formats outputFormat;
 
         public int ExitCode { get; private set; }
+        private readonly string bsdecPath;
 #if RELEASELINUX
         private const string ShippedBsdecFilename = "bsdec";
 #else
@@ -45,6 +47,9 @@ namespace BsdecGui.Outsourcing
             this.schemaPath = schemaPath;
             this.inputFormat = inputFormat;
             this.outputFormat = outputFormat;
+            bsdecPath = Path.Combine(
+                Directory.GetParent(typeof(Bsdec).Assembly.Location)?.ToString() ?? string.Empty,
+                ShippedBsdecFilename);
         }
 
         private Process? process;
@@ -59,9 +64,10 @@ namespace BsdecGui.Outsourcing
                     return;
                 }
 #if DEBUG
+                Logging.Log.Debug($"In production this would launch {bsdecPath}, however the path is different in debug mode.");
                 ProcessStartInfo startInfo = new($@"{Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)}\source\repos\Bsdec\bin\Release\win-x64\publish\{ShippedBsdecFilename}", BuildArgs())
 #else
-                ProcessStartInfo startInfo = new(ShippedBsdecFilename, BuildArgs())
+                ProcessStartInfo startInfo = new(bsdecPath, BuildArgs())
 #endif
                 {
                     RedirectStandardInput = true,
