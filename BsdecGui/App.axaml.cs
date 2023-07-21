@@ -25,9 +25,6 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using BsdecGui.ViewModels;
 using BsdecGui.Views;
-using System.Reflection;
-
-[assembly: AssemblyVersion("1.0.0.0")]
 
 namespace BsdecGui
 {
