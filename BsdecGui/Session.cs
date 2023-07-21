@@ -27,6 +27,7 @@ using System.Collections.Generic;
 using System.IO;
 using static BsdecGui.Outsourcing.Bsdec;
 using static BsdecGui.Logging;
+using System.Threading;
 
 namespace BsdecGui
 {
@@ -36,11 +37,24 @@ namespace BsdecGui
         public FormatEditor XmlContext { get; }
         public SchemaGen SchemaGen { get; }
 
+        /// <summary>
+        /// Timer for automatic syncing of the panes.
+        /// </summary>
+        /// <remarks>
+        /// In theory this should be disposed, however it runs for the full lifetime of the program
+        /// so there's not really a good way to do that.
+        /// </remarks>
+        // Unread just because there's no need to read it, however we can't remove it since it triggers our syncs.
+#pragma warning disable IDE0052 // Remove unread private members
+        private readonly Timer syncTimer;
+#pragma warning restore IDE0052 // Remove unread private members
+
         public Session(SchemaGen schemaGen)
         {
             SchemaGen = schemaGen;
             JsonContext = BuildFormatContextViewModel(Formats.Json, SchemaGen.JsonFilePicker);
             XmlContext = BuildFormatContextViewModel(Formats.Xml, SchemaGen.XmlFilePicker);
+            syncTimer = new(x=> { JsonContext.SyncTimer_Tick(); XmlContext.SyncTimer_Tick(); }, null, 1000, 500);
         }
 
         private async void SyncEditorPanes(Formats sourceFormat, Formats? currentPane = null, bool refreshSource = false, bool exportBinary = false)

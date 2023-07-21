@@ -31,7 +31,6 @@ namespace BsdecGui.ViewModels
     internal class FormatEditor : ErrorViewModel
     {
         public required SaveFilePicker SaveFilePicker { get; set; }
-        private readonly Timer syncTimer;
 
         public bool TextChangePending = false;
         private string text = string.Empty;
@@ -48,11 +47,6 @@ namespace BsdecGui.ViewModels
             }
         }
 
-        public FormatEditor()
-        {
-            syncTimer = new(SyncTimer_Tick, null, 1000, 500);
-        }
-
         public required Action Sync { get; set; }
         public required Action Validate { get; set; }
         public required Action Reimport { get; set; }
@@ -62,7 +56,7 @@ namespace BsdecGui.ViewModels
 
 
         readonly object syncLock = new();
-        private void SyncTimer_Tick(object? stateInfo)
+        public void SyncTimer_Tick()
         {
             if (!Monitor.TryEnter(syncLock))
                 return;
@@ -77,7 +71,7 @@ namespace BsdecGui.ViewModels
             {
                 Monitor.Exit(syncLock);
             }
-        } 
+        }
 
         public async void Open()
         {
@@ -116,8 +110,9 @@ namespace BsdecGui.ViewModels
             // ExitCode -1 means no input
             if (!string.IsNullOrWhiteSpace(e.Stdout) || e.ExitCode == -1)
             {
-                Text = e.Stdout;
-                TextChangePending = false; // no need to validate the text we just put there...
+                // no need to validate the text we just put there, so we'll call text directly rather than Text
+                text = e.Stdout;
+                this.RaiseAndSetIfChanged(ref text, e.Stdout);
             }
         }
     }

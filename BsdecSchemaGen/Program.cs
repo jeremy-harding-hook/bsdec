@@ -23,7 +23,10 @@ using BsdecSchemaGen.Functions;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Text.RegularExpressions;
+
+[assembly: AssemblyVersion("1.0.0.0")]
 
 namespace BsdecSchemaGen
 {
