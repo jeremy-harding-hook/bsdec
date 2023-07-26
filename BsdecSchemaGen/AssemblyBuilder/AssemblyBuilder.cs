@@ -34,7 +34,7 @@ namespace BsdecSchemaGen.AssemblyBuilder
         public static int BuildAssembly(ModuleDefinition sourceModule, string destinationFilepath, TypeDefinition topleveSavefileClass, MethodDefinition? toplevelReaderMethod, MethodDefinition? toplevelWriterMethod)
         {
             string name = $"{topleveSavefileClass.Name}-savefile-Bsdec-schema";
-            AssemblyDefinition schemaAssembly = AssemblyDefinition.CreateAssembly(new AssemblyNameDefinition(name, new Version(1, 0, 0, 0)), $"{name}.dll", ModuleKind.Dll);
+            AssemblyDefinition schemaAssembly = AssemblyDefinition.CreateAssembly(new AssemblyNameDefinition(name, new Version(1, 0, 0, 0)), $"{name}.dll", new ModuleParameters { Kind = ModuleKind.Dll, AssemblyResolver = sourceModule.AssemblyResolver});
 
             ModuleDefinition schemaModule = schemaAssembly.MainModule;
 

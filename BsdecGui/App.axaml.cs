@@ -40,7 +40,7 @@ namespace BsdecGui
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
                 desktop.MainWindow = new MainWindow();
-                desktop.MainWindow.DataContext = new MainViewModel(desktop.MainWindow.StorageProvider, desktop.MainWindow);
+                desktop.MainWindow.DataContext = new MainViewModel(desktop.MainWindow);
             }
             else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
             {
@@ -49,7 +49,7 @@ namespace BsdecGui
                 TopLevel topLevel = TopLevel.GetTopLevel(singleViewPlatform.MainView) ??
                     throw new System.ApplicationException($"TopLevel is null at {nameof(OnFrameworkInitializationCompleted)}! This will prevent us from doing anything useful.");
                 
-                singleViewPlatform.MainView.DataContext = new MainViewModel(topLevel.StorageProvider);
+                singleViewPlatform.MainView.DataContext = new MainViewModel(topLevel);
             }
 
             base.OnFrameworkInitializationCompleted();

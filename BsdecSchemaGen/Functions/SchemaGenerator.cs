@@ -93,18 +93,18 @@ namespace BsdecSchemaGen.Functions
             if (writerName != null)
                 toplevelWriterMethod = FindMethod(savefileClass, writerName, true);
 
-            if(toplevelWriterMethod == null && toplevelReaderMethod == null)
+            if (toplevelWriterMethod == null && toplevelReaderMethod == null)
             {
                 Console.Error.WriteLine($"No usable top-level read or write method available, aborting.");
                 return 1;
             }
 
-            if(toplevelWriterMethod == null)
+            if (toplevelWriterMethod == null)
             {
                 Console.Error.WriteLine("Warning: The generated schema will only support reading of preexisting save files.");
             }
 
-            if(toplevelReaderMethod == null)
+            if (toplevelReaderMethod == null)
             {
                 Console.Error.WriteLine("Warning: The generated schema will support writing new save files, but will not permit reading from existing ones.");
             }
@@ -122,7 +122,10 @@ namespace BsdecSchemaGen.Functions
                     Console.Error.WriteLine($"Either it does not exist or the user is missing the needed permissions.");
                     return null;
                 }
-                return ModuleDefinition.ReadModule(assembly);
+
+                DefaultAssemblyResolver resolver = new();
+                resolver.AddSearchDirectory(Path.GetDirectoryName(assembly) ?? string.Empty);
+                return ModuleDefinition.ReadModule(assembly, new ReaderParameters(ReadingMode.Deferred) { AssemblyResolver = resolver });
             }
             catch (Exception ex)
             {

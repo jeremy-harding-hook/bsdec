@@ -107,14 +107,14 @@ namespace BsdecSchemaGen.AssemblyBuilder
                 if (derivedTypes.Any())
                 {
                     MethodReference jsonDerivedTypeAttributeConstructor = newModule.ImportReference(
-                    typeof(JsonDerivedTypeAttribute).GetConstructor(new Type[] {typeof(Type), typeof(string)}));
+                    typeof(JsonDerivedTypeAttribute).GetConstructor(new Type[] { typeof(Type), typeof(string) }));
 
                     MethodReference xmlDerivedTypeAttributeConstructor = newModule.ImportReference(
-                    typeof(XmlIncludeAttribute).GetConstructor(new Type[] { typeof(Type)}));
+                    typeof(XmlIncludeAttribute).GetConstructor(new Type[] { typeof(Type) }));
 
                     CustomAttribute jsonAttribute;
                     CustomAttribute xmlAttribute;
-                    List<CustomAttribute>jsonAttributes = new(); 
+                    List<CustomAttribute> jsonAttributes = new();
                     List<CustomAttribute> xmlAttributes = new();
 
                     bool derivedTypesInModule = false;
@@ -123,22 +123,22 @@ namespace BsdecSchemaGen.AssemblyBuilder
                     {
                         TypeDefinition newType = FindOrCreateGenericType(newModule, oldModule, derivedType).Resolve();
 
-                        if(newType.Module == newModule)
+                        if (newType.Module == newModule)
                         {
                             derivedTypesInModule = true;
 
                             jsonAttribute = new(jsonDerivedTypeAttributeConstructor);
                             jsonAttribute.ConstructorArguments.Add(new(newModule.ImportReference(typeof(Type)), newType));
                             jsonAttribute.ConstructorArguments.Add(new(newModule.ImportReference(typeof(string)), newType.FullName));
-jsonAttributes.Add(jsonAttribute);
+                            jsonAttributes.Add(jsonAttribute);
 
                             xmlAttribute = new(xmlDerivedTypeAttributeConstructor);
                             xmlAttribute.ConstructorArguments.Add(new(newModule.ImportReference(typeof(Type)), newType));
-                           xmlAttributes.Add(xmlAttribute);
+                            xmlAttributes.Add(xmlAttribute);
                         }
                     }
 
-                    if(derivedTypesInModule)
+                    if (derivedTypesInModule)
                     {
                         jsonAttribute = new(jsonDerivedTypeAttributeConstructor);
                         jsonAttribute.ConstructorArguments.Add(new(newModule.ImportReference(typeof(Type)), definition));
@@ -146,7 +146,7 @@ jsonAttributes.Add(jsonAttribute);
 
                         jsonAttributes.Add(jsonAttribute);
 
-                        foreach(CustomAttribute attribute in jsonAttributes)
+                        foreach (CustomAttribute attribute in jsonAttributes)
                         {
                             definition.CustomAttributes.Add(attribute);
                         }

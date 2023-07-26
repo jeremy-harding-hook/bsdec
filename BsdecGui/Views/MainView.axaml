@@ -39,10 +39,10 @@
 			<views:SchemaGenView DataContext="{Binding SchemaGen}"/>
 		</TabItem>
 		<TabItem Header="Json">
-			<views:FormatEditorView DataContext="{Binding JsonEditor}"/>
+			<views:FormatEditorView DataContext="{Binding JsonEditor}" Name="JsonEditor"/>
 		</TabItem>
 		<TabItem Header="Xml">
-			<views:FormatEditorView DataContext="{Binding XmlEditor}"/>
+			<views:FormatEditorView DataContext="{Binding XmlEditor}" Name="XmlEditor"/>
 		</TabItem>
 		<TabItem Header="Help">
 			<views:HelpView/>

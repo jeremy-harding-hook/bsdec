@@ -20,7 +20,6 @@
 //-----------------------------------------------------------------------
 
 using Avalonia.Controls;
-using Avalonia.Platform.Storage;
 
 namespace BsdecGui.ViewModels
 {
@@ -31,8 +30,8 @@ namespace BsdecGui.ViewModels
         public FormatEditor JsonEditor { get; }
         public FormatEditor XmlEditor { get; }
 
-        public MainViewModel(IStorageProvider storageProvider, Window? mainWindow = null) { 
-            SchemaGen = new SchemaGen(storageProvider, mainWindow);
+        public MainViewModel(TopLevel topLevel) { 
+            SchemaGen = new SchemaGen(topLevel.StorageProvider, topLevel as Window);
             session = new Session(SchemaGen);
             JsonEditor = session.JsonContext;
             XmlEditor = session.XmlContext;

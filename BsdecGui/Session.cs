@@ -28,6 +28,7 @@ using System.IO;
 using static BsdecGui.Outsourcing.Bsdec;
 using static BsdecGui.Logging;
 using System.Threading;
+using System.Text;
 
 namespace BsdecGui
 {
@@ -54,7 +55,7 @@ namespace BsdecGui
             SchemaGen = schemaGen;
             JsonContext = BuildFormatContextViewModel(Formats.Json, SchemaGen.JsonFilePicker);
             XmlContext = BuildFormatContextViewModel(Formats.Xml, SchemaGen.XmlFilePicker);
-            syncTimer = new(x=> { JsonContext.SyncTimer_Tick(); XmlContext.SyncTimer_Tick(); }, null, 1000, 500);
+            syncTimer = new(x => { JsonContext.SyncTimer_Tick(); XmlContext.SyncTimer_Tick(); }, null, 1000, 500);
         }
 
         private async void SyncEditorPanes(Formats sourceFormat, Formats? currentPane = null, bool refreshSource = false, bool exportBinary = false)
@@ -71,8 +72,9 @@ namespace BsdecGui
                 }
                 string schemaPath = SchemaGen.SchemaFilePicker.Path;
 
-                string? input = null;
+                Func<Stream>? getInput = null;
                 List<Formats> destinationFormats = new();
+                Queue<Stream> inputs = new();
                 if (refreshSource)
                 {
                     destinationFormats.Add(sourceFormat);
@@ -84,11 +86,13 @@ namespace BsdecGui
                 switch (sourceFormat)
                 {
                     case Formats.Json:
-                        input = JsonContext.Text;
+                        await JsonContext.RefreshText();
+                        getInput = () => new MemoryStream(Encoding.UTF8.GetBytes(JsonContext.Text));
                         destinationFormats.Add(Formats.Xml);
                         break;
                     case Formats.Xml:
-                        input = XmlContext.Text;
+                        await XmlContext.RefreshText();
+                        getInput = () => new MemoryStream(Encoding.UTF8.GetBytes(XmlContext.Text));
                         destinationFormats.Add(Formats.Json);
                         break;
                     case Formats.Binary:
@@ -101,28 +105,34 @@ namespace BsdecGui
                                 return;
                             }
                         }
-                        input = File.ReadAllText(SchemaGen.ImportFilePicker.Path);
+                        getInput = () => File.OpenRead(SchemaGen.ImportFilePicker.Path);
                         destinationFormats.Add(Formats.Xml);
                         destinationFormats.Add(Formats.Json);
                         break;
+                    default: throw new NotImplementedException();
                 }
-
-                input ??= string.Empty;
-                List<Bsdec> bsdecInstances = new();
 
                 foreach (Formats format in destinationFormats)
                 {
-                    StreamWriter? outputWriter = null;
+                    inputs.Enqueue(getInput());
+                }
+
+                foreach (Formats format in destinationFormats)
+                {
                     try
                     {
-                        Bsdec bsdec = new(input, schemaPath, sourceFormat, format);
+                        Stream input = inputs.Dequeue();
+                        Stream? output = null;
+                        Bsdec bsdec = new(schemaPath, sourceFormat, format);
 
                         switch (format)
                         {
                             case Formats.Json:
+                                output = new MemoryStream();
                                 bsdec.OnProcessCompleted += JsonContext.Bsdec_OnProcessCompleted;
                                 break;
                             case Formats.Xml:
+                                output = new MemoryStream();
                                 bsdec.OnProcessCompleted += XmlContext.Bsdec_OnProcessCompleted;
                                 break;
                             case Formats.Binary:
@@ -135,14 +145,14 @@ namespace BsdecGui
                                         continue;
                                     }
                                 }
+                                output = new FileStream(SchemaGen.ExportFilePicker.Path, FileMode.Create);
                                 bsdec.OnProcessCompleted += (sender, e) =>
                                 {
-                                    using (outputWriter = new(SchemaGen.ExportFilePicker.Path))
-                                    {
-                                        outputWriter.WriteLineAsync(e.Stdout);
-                                    }
+                                    output?.Flush();
+                                    output?.Dispose();
                                 };
                                 break;
+                            default: throw new NotImplementedException();
                         }
                         bsdec.OnProcessCompleted += (sender, e) =>
                         {
@@ -150,10 +160,11 @@ namespace BsdecGui
                             {
                                 errorViewModel.AddError(e.Stderr);
                             }
-                            bsdecInstances.Remove((Bsdec)sender!);
+                            // Note: This disposal must happen after the memoryStreams for the editor views have been read
+                            input?.Flush();
+                            input?.Dispose();
                         };
-                        bsdec.Start();
-                        bsdecInstances.Add(bsdec);
+                        bsdec.Start(input, output);
                     }
                     catch (Exception ex)
                     {

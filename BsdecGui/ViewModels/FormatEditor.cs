@@ -21,10 +21,13 @@
 
 using System;
 using System.IO;
+using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
+using Avalonia.Threading;
+using AvaloniaEdit;
 using BsdecGui.Outsourcing;
 using BsdecGui.ViewModels.FilePickers;
-using ReactiveUI;
 
 namespace BsdecGui.ViewModels
 {
@@ -32,19 +35,57 @@ namespace BsdecGui.ViewModels
     {
         public required SaveFilePicker SaveFilePicker { get; set; }
 
-        public bool TextChangePending = false;
-        private string text = string.Empty;
+        private bool textChangePending = false;
+        private bool textChangedBySync = false;
+
+        private string backupText = string.Empty;
+
+        public async Task RefreshText()
+        {
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                if (TextEditor != null)
+                    backupText = TextEditor.Text;
+            }).GetTask();
+        }
+
         public string Text
         {
-            get => text;
+            get
+            {
+                return backupText;
+            }
             set
             {
-                if (text != value)
-                {
-                    TextChangePending = true;
-                    this.RaiseAndSetIfChanged(ref text, value);
-                }
+                if (value == backupText)
+                    return;
+                backupText = value;
+                if (TextEditor != null)
+                    Dispatcher.UIThread.InvokeAsync(() => TextEditor.Text = value);
             }
+        }
+
+        private TextEditor? textEditor;
+        private TextEditor? TextEditor
+        {
+            get => textEditor;
+            set
+            {
+                textEditor = value;
+                if (textEditor != null)
+                    textEditor.Text = backupText;
+            }
+        }
+
+        public void TextEditor_TextChanged(object? sender, EventArgs e)
+        {
+            textChangePending = !textChangedBySync;
+        }
+
+        public void TextEditor_DataContextChanged(object? sender, EventArgs e)
+        {
+            if (TextEditor == null && sender is TextEditor texEd)
+                TextEditor = texEd;
         }
 
         public required Action Sync { get; set; }
@@ -62,9 +103,10 @@ namespace BsdecGui.ViewModels
                 return;
             try
             {
-                if (!TextChangePending)
+                if (!textChangePending)
                     return;
-                TextChangePending = false;
+
+                textChangePending = false;
                 Sync();
             }
             finally
@@ -89,7 +131,10 @@ namespace BsdecGui.ViewModels
         {
             await SaveFilePicker.OpenPicker();
             if (SaveFilePicker.Path != null)
+            {
+                await RefreshText();
                 File.WriteAllText(SaveFilePicker.Path, Text);
+            }
             else
             {
                 ClearErrors();
@@ -97,10 +142,13 @@ namespace BsdecGui.ViewModels
             }
         }
 
-        public void Save()
+        public async void Save()
         {
             if (!string.IsNullOrEmpty(SaveFilePicker.Path))
+            {
+                await RefreshText();
                 File.WriteAllText(SaveFilePicker.Path, Text);
+            }
             else
                 SaveAs();
         }
@@ -108,11 +156,14 @@ namespace BsdecGui.ViewModels
         public void Bsdec_OnProcessCompleted(object? sender, BsdecCompletedEventArgs e)
         {
             // ExitCode -1 means no input
-            if (!string.IsNullOrWhiteSpace(e.Stdout) || e.ExitCode == -1)
+            if (e.Stdout != null)
             {
-                // no need to validate the text we just put there, so we'll call text directly rather than Text
-                text = e.Stdout;
-                this.RaiseAndSetIfChanged(ref text, e.Stdout);
+                textChangedBySync = true;
+                e.Stdout.Flush();
+                if (e.Stdout is MemoryStream capturedStdout)
+                    Text = Encoding.UTF8.GetString(capturedStdout.GetBuffer()).Trim('\x000');
+                e.Stdout.Dispose();
+                textChangedBySync = false;
             }
         }
     }

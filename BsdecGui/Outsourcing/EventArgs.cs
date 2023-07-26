@@ -20,6 +20,7 @@
 //-----------------------------------------------------------------------
 
 using System;
+using System.IO;
 
 namespace BsdecGui.Outsourcing
 {
@@ -31,7 +32,7 @@ namespace BsdecGui.Outsourcing
     internal class BsdecCompletedEventArgs : EventArgs
     {
         public int ExitCode { get; set; } = -1;
-        public string Stdout { get; set; } = string.Empty;
+        public Stream? Stdout { get; set; } = null;
         public string Stderr { get; set; } = string.Empty;
     }
 }

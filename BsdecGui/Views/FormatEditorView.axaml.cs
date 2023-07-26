@@ -20,6 +20,8 @@
 //-----------------------------------------------------------------------
 
 using Avalonia.Controls;
+using BsdecGui.ViewModels;
+using System;
 
 namespace BsdecGui.Views
 {
@@ -28,6 +30,16 @@ namespace BsdecGui.Views
         public FormatEditorView()
         {
             InitializeComponent();
+        }
+
+        public void TextEditor_TextChanged(object? sender, EventArgs e)
+        {
+            (DataContext as FormatEditor)?.TextEditor_TextChanged(sender, e);
+        }
+
+        public void TextEditor_DataContextChanged(object? sender, EventArgs e)
+        {
+            (DataContext as FormatEditor)?.TextEditor_DataContextChanged(sender, e);
         }
     }
 }

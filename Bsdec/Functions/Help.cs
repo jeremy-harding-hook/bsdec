@@ -54,7 +54,7 @@ namespace Bsdec.Functions
             $"    auto\n" +
             $"        When used as input, makes a rough guess based on the first characters\n" +
             $"        of input. Under certain conditions, this 'good faith' effort is liable\n" +
-            $"        to fail, so in scripts it is best to provide more precise instruction." +
+            $"        to fail, so in scripts it is best to provide more precise instruction.\n" +
             $"        When applied to output, if the input format actually used was json or\n" +
             $"        xml the output format is binary. If the input format used was binary,\n" +
             $"        the output format is json (or xml during the full moon).\n\n" +

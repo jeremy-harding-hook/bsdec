@@ -28,7 +28,6 @@ namespace BsdecGui.Outsourcing
 {
     internal class Bsdec
     {
-        private readonly string stdin;
         private readonly string schemaPath;
         private readonly Formats inputFormat;
         private readonly Formats outputFormat;
@@ -41,26 +40,25 @@ namespace BsdecGui.Outsourcing
         private const string ShippedBsdecFilename = "Bsdec.exe";
 #endif
 
-        public Bsdec(string stdin, string schemaPath, Formats inputFormat, Formats outputFormat)
+        public Bsdec(string schemaPath, Formats inputFormat, Formats outputFormat)
         {
-            this.stdin = stdin;
             this.schemaPath = schemaPath;
             this.inputFormat = inputFormat;
             this.outputFormat = outputFormat;
-            bsdecPath = Path.Combine(
-                Directory.GetParent(typeof(Bsdec).Assembly.Location)?.ToString() ?? string.Empty,
-                ShippedBsdecFilename);
+            bsdecPath = Path.Combine(AppContext.BaseDirectory, ShippedBsdecFilename);
         }
 
         private Process? process;
+        private Stream? stdout;
 
-        public void Start()
+        public void Start(Stream? stdin, Stream stdout)
         {
+            this.stdout = stdout;
             try
             {
-                if (string.IsNullOrWhiteSpace(stdin))
+                if (stdin == null || stdin.CanSeek && stdin.Length == 0)
                 {
-                    OnProcessCompleted?.Invoke(this, new BsdecCompletedEventArgs() { Stdout = string.Empty, Stderr = "No input.", ExitCode = -1 });
+                    OnProcessCompleted?.Invoke(this, new BsdecCompletedEventArgs() { Stderr = "No input.", ExitCode = -1 });
                     return;
                 }
 #if DEBUG
@@ -83,47 +81,33 @@ namespace BsdecGui.Outsourcing
                 };
 
                 process.ErrorDataReceived += Process_ErrorDataReceived;
-                process.OutputDataReceived += Process_OutputDataReceived;
                 process.Exited += Process_Exited;
 
                 Logging.Log.Info($"Command line passed to Bsdec: {process.StartInfo.FileName} {process.StartInfo.Arguments}");
 
                 process.Start();
                 process.BeginErrorReadLine();
-                process.BeginOutputReadLine();
+
+                // Don't complain when the program closes the pipe
                 try
                 {
-                    // Don't complain when the program closes the pipe.
-                    process.StandardInput.Write(stdin);
+                    stdin.CopyTo(process.StandardInput.BaseStream);
                     process.StandardInput.Close();
                 }
                 catch { }
+
+                process.StandardOutput.BaseStream.CopyToAsync(stdout);
                 Logging.Log.Info("Bsdec started.");
             }
             catch (Exception ex)
             {
                 Errors += $"{ex}\n";
+                process?.Kill();
                 process?.Dispose();
                 ExitCode = 3;
-                OnProcessCompleted?.Invoke(this, new BsdecCompletedEventArgs() { Stderr = Errors, ExitCode = ExitCode });
+                OnProcessCompleted?.Invoke(this, new BsdecCompletedEventArgs() { Stdout = stdout, Stderr = Errors, ExitCode = ExitCode });
                 Logging.Log.Error(ex, "Exception while launching Bsdec");
             }
-        }
-
-        public void Kill()
-        {
-            Logging.Log.Info($"Killing Bsdec");
-            ExitCode = 4;
-            process?.Kill();
-            process?.Dispose();
-        }
-
-        public string Output { get; private set; } = string.Empty;
-        private void Process_OutputDataReceived(object sender, DataReceivedEventArgs e)
-        {
-            if (string.IsNullOrEmpty(e.Data))
-                return;
-            Output += e.Data + '\n';
         }
 
         public string Errors { get; private set; } = string.Empty;
@@ -148,12 +132,23 @@ namespace BsdecGui.Outsourcing
                     ExitCode = 0;
                 }
             }
+            else
+            {
+                try
+                {
+                    process?.WaitForExit();
+                }
+                catch
+                {
+                    ExitCode = 3;
+                }
+            }
+
             // This extra WaitForExit has the effect of waiting for the streams to close.
             process?.Dispose();
-            Logging.Log.Debug($"Output from Bsdec: {Output}");
             Logging.Log.Debug($"Errors from Bsdec: {Errors}");
             Logging.Log.Info($"Bsdec exited with code {ExitCode}");
-            OnProcessCompleted?.Invoke(this, new BsdecCompletedEventArgs { Stdout = Output, Stderr = Errors, ExitCode = ExitCode });
+            OnProcessCompleted?.Invoke(this, new BsdecCompletedEventArgs { Stdout = stdout, Stderr = Errors, ExitCode = ExitCode });
         }
         public event EventHandler<BsdecCompletedEventArgs>? OnProcessCompleted;
 

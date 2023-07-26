@@ -48,9 +48,7 @@ namespace BsdecGui.Outsourcing
             TopLevelClassName = topLevelClassName;
             ReadMethodName = readMethodName;
             WriteMethodName = writeMethodName;
-            schemaGenPath = Path.Combine(
-                Directory.GetParent(typeof(SchemaGenerator).Assembly.Location)?.ToString() ?? string.Empty, 
-                ShippedSchemaGenFilename);
+            schemaGenPath = Path.Combine(AppContext.BaseDirectory, ShippedSchemaGenFilename);
         }
         private Process? process;
 
