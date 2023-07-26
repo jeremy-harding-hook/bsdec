@@ -1,4 +1,25 @@
-﻿using System;
+﻿//-----------------------------------------------------------------------
+//
+// Copyright 2023 Jeremy Harding Hook
+//
+// This file is part of BsdecSchemaGen.
+//
+// BsdecSchemaGen is free software: you can redistribute it and/or modify it under
+// the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// BsdecSchemaGen is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+// details.
+//
+// You should have received a copy of the GNU General Public License along with
+// BsdecSchemaGen. If not, see <https://www.gnu.org/licenses/>.
+//
+//-----------------------------------------------------------------------
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -72,18 +93,18 @@ namespace BsdecSchemaGen.Functions
             if (writerName != null)
                 toplevelWriterMethod = FindMethod(savefileClass, writerName, true);
 
-            if(toplevelWriterMethod == null && toplevelReaderMethod == null)
+            if (toplevelWriterMethod == null && toplevelReaderMethod == null)
             {
                 Console.Error.WriteLine($"No usable top-level read or write method available, aborting.");
                 return 1;
             }
 
-            if(toplevelWriterMethod == null)
+            if (toplevelWriterMethod == null)
             {
                 Console.Error.WriteLine("Warning: The generated schema will only support reading of preexisting save files.");
             }
 
-            if(toplevelReaderMethod == null)
+            if (toplevelReaderMethod == null)
             {
                 Console.Error.WriteLine("Warning: The generated schema will support writing new save files, but will not permit reading from existing ones.");
             }
@@ -101,7 +122,10 @@ namespace BsdecSchemaGen.Functions
                     Console.Error.WriteLine($"Either it does not exist or the user is missing the needed permissions.");
                     return null;
                 }
-                return ModuleDefinition.ReadModule(assembly);
+
+                DefaultAssemblyResolver resolver = new();
+                resolver.AddSearchDirectory(Path.GetDirectoryName(assembly) ?? string.Empty);
+                return ModuleDefinition.ReadModule(assembly, new ReaderParameters(ReadingMode.Deferred) { AssemblyResolver = resolver });
             }
             catch (Exception ex)
             {

@@ -1,35 +1,91 @@
-﻿using System;
+﻿//-----------------------------------------------------------------------
+//
+// Copyright 2023 Jeremy Harding Hook
+//
+// This file is part of BsdecGui.
+//
+// BsdecGui is free software: you can redistribute it and/or modify it under
+// the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// BsdecGui is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+// details.
+//
+// You should have received a copy of the GNU General Public License along with
+// BsdecGui. If not, see <https://www.gnu.org/licenses/>.
+//
+//-----------------------------------------------------------------------
+
+using System;
 using System.IO;
+using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
+using Avalonia.Threading;
+using AvaloniaEdit;
 using BsdecGui.Outsourcing;
 using BsdecGui.ViewModels.FilePickers;
-using ReactiveUI;
 
 namespace BsdecGui.ViewModels
 {
     internal class FormatEditor : ErrorViewModel
     {
         public required SaveFilePicker SaveFilePicker { get; set; }
-        private readonly Timer syncTimer;
 
-        public bool TextChangePending = false;
-        private string text = string.Empty;
+        private bool textChangePending = false;
+        private bool textChangedBySync = false;
+
+        private string backupText = string.Empty;
+
+        public async Task RefreshText()
+        {
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                if (TextEditor != null)
+                    backupText = TextEditor.Text;
+            }).GetTask();
+        }
+
         public string Text
         {
-            get => text;
+            get
+            {
+                return backupText;
+            }
             set
             {
-                if (text != value)
-                {
-                    TextChangePending = true;
-                    this.RaiseAndSetIfChanged(ref text, value);
-                }
+                if (value == backupText)
+                    return;
+                backupText = value;
+                if (TextEditor != null)
+                    Dispatcher.UIThread.InvokeAsync(() => TextEditor.Text = value);
             }
         }
 
-        public FormatEditor()
+        private TextEditor? textEditor;
+        private TextEditor? TextEditor
         {
-            syncTimer = new(SyncTimer_Tick, null, 1000, 500);
+            get => textEditor;
+            set
+            {
+                textEditor = value;
+                if (textEditor != null)
+                    textEditor.Text = backupText;
+            }
+        }
+
+        public void TextEditor_TextChanged(object? sender, EventArgs e)
+        {
+            textChangePending = !textChangedBySync;
+        }
+
+        public void TextEditor_DataContextChanged(object? sender, EventArgs e)
+        {
+            if (TextEditor == null && sender is TextEditor texEd)
+                TextEditor = texEd;
         }
 
         public required Action Sync { get; set; }
@@ -41,22 +97,23 @@ namespace BsdecGui.ViewModels
 
 
         readonly object syncLock = new();
-        private void SyncTimer_Tick(object? stateInfo)
+        public void SyncTimer_Tick()
         {
             if (!Monitor.TryEnter(syncLock))
                 return;
             try
             {
-                if (!TextChangePending)
+                if (!textChangePending)
                     return;
-                TextChangePending = false;
+
+                textChangePending = false;
                 Sync();
             }
             finally
             {
                 Monitor.Exit(syncLock);
             }
-        } 
+        }
 
         public async void Open()
         {
@@ -74,7 +131,10 @@ namespace BsdecGui.ViewModels
         {
             await SaveFilePicker.OpenPicker();
             if (SaveFilePicker.Path != null)
+            {
+                await RefreshText();
                 File.WriteAllText(SaveFilePicker.Path, Text);
+            }
             else
             {
                 ClearErrors();
@@ -82,10 +142,13 @@ namespace BsdecGui.ViewModels
             }
         }
 
-        public void Save()
+        public async void Save()
         {
             if (!string.IsNullOrEmpty(SaveFilePicker.Path))
+            {
+                await RefreshText();
                 File.WriteAllText(SaveFilePicker.Path, Text);
+            }
             else
                 SaveAs();
         }
@@ -93,10 +156,14 @@ namespace BsdecGui.ViewModels
         public void Bsdec_OnProcessCompleted(object? sender, BsdecCompletedEventArgs e)
         {
             // ExitCode -1 means no input
-            if (!string.IsNullOrWhiteSpace(e.Stdout) || e.ExitCode == -1)
+            if (e.Stdout != null)
             {
-                Text = e.Stdout;
-                TextChangePending = false; // no need to validate the text we just put there...
+                textChangedBySync = true;
+                e.Stdout.Flush();
+                if (e.Stdout is MemoryStream capturedStdout)
+                    Text = Encoding.UTF8.GetString(capturedStdout.GetBuffer()).Trim('\x000');
+                e.Stdout.Dispose();
+                textChangedBySync = false;
             }
         }
     }

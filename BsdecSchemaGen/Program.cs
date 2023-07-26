@@ -1,8 +1,28 @@
-﻿using BsdecSchemaGen.Functions;
+﻿//-----------------------------------------------------------------------
+//
+// Copyright 2023 Jeremy Harding Hook
+//
+// This file is part of BsdecSchemaGen.
+//
+// BsdecSchemaGen is free software: you can redistribute it and/or modify it under
+// the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// BsdecSchemaGen is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+// details.
+//
+// You should have received a copy of the GNU General Public License along with
+// BsdecSchemaGen. If not, see <https://www.gnu.org/licenses/>.
+//
+//-----------------------------------------------------------------------
+
+using BsdecSchemaGen.Functions;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace BsdecSchemaGen
@@ -37,11 +57,15 @@ namespace BsdecSchemaGen
         static int HandleArgs(string[] args)
         {
             Option helpOption = new("help", 'h');
+            Option aboutOption = new("about", null);
+            Option licenseOption = new("license", null);
             Option readerOption = new("reader", 'r');
             Option writerOption = new("writer", 'w');
             List<Option> options = new()
             {
                 helpOption,
+                aboutOption,
+                licenseOption,
                 readerOption,
                 writerOption
             };
@@ -92,6 +116,24 @@ namespace BsdecSchemaGen
                 {
                     return FailHelpfully();
                 }
+            }
+
+            if (helpOption.set)
+            {
+                Help.ShowHelpText(false);
+                return 0;
+            }
+
+            if (aboutOption.set)
+            {
+                About.ShowAboutText();
+                return 0;
+            }
+
+            if (licenseOption.set)
+            {
+                License.ShowLicenseText();
+                return 0;
             }
 
             if (helpOption.set)

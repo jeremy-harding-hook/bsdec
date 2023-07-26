@@ -1,4 +1,25 @@
-﻿using System;
+﻿//-----------------------------------------------------------------------
+//
+// Copyright 2023 Jeremy Harding Hook
+//
+// This file is part of Bsdec.
+//
+// Bsdec is free software: you can redistribute it and/or modify it under
+// the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// Bsdec is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+// details.
+//
+// You should have received a copy of the GNU General Public License along with
+// Bsdec. If not, see <https://www.gnu.org/licenses/>.
+//
+//-----------------------------------------------------------------------
+
+using System;
 namespace Bsdec.Functions
 {
     internal static class Help
@@ -33,7 +54,7 @@ namespace Bsdec.Functions
             $"    auto\n" +
             $"        When used as input, makes a rough guess based on the first characters\n" +
             $"        of input. Under certain conditions, this 'good faith' effort is liable\n" +
-            $"        to fail, so in scripts it is best to provide more precise instruction." +
+            $"        to fail, so in scripts it is best to provide more precise instruction.\n" +
             $"        When applied to output, if the input format actually used was json or\n" +
             $"        xml the output format is binary. If the input format used was binary,\n" +
             $"        the output format is json (or xml during the full moon).\n\n" +

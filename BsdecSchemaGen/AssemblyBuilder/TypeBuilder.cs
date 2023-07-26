@@ -1,4 +1,25 @@
-﻿using Mono.Cecil;
+﻿//-----------------------------------------------------------------------
+//
+// Copyright 2023 Jeremy Harding Hook
+//
+// This file is part of BsdecSchemaGen.
+//
+// BsdecSchemaGen is free software: you can redistribute it and/or modify it under
+// the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// BsdecSchemaGen is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+// details.
+//
+// You should have received a copy of the GNU General Public License along with
+// BsdecSchemaGen. If not, see <https://www.gnu.org/licenses/>.
+//
+//-----------------------------------------------------------------------
+
+using Mono.Cecil;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -86,14 +107,14 @@ namespace BsdecSchemaGen.AssemblyBuilder
                 if (derivedTypes.Any())
                 {
                     MethodReference jsonDerivedTypeAttributeConstructor = newModule.ImportReference(
-                    typeof(JsonDerivedTypeAttribute).GetConstructor(new Type[] {typeof(Type), typeof(string)}));
+                    typeof(JsonDerivedTypeAttribute).GetConstructor(new Type[] { typeof(Type), typeof(string) }));
 
                     MethodReference xmlDerivedTypeAttributeConstructor = newModule.ImportReference(
-                    typeof(XmlIncludeAttribute).GetConstructor(new Type[] { typeof(Type)}));
+                    typeof(XmlIncludeAttribute).GetConstructor(new Type[] { typeof(Type) }));
 
                     CustomAttribute jsonAttribute;
                     CustomAttribute xmlAttribute;
-                    List<CustomAttribute>jsonAttributes = new(); 
+                    List<CustomAttribute> jsonAttributes = new();
                     List<CustomAttribute> xmlAttributes = new();
 
                     bool derivedTypesInModule = false;
@@ -102,22 +123,22 @@ namespace BsdecSchemaGen.AssemblyBuilder
                     {
                         TypeDefinition newType = FindOrCreateGenericType(newModule, oldModule, derivedType).Resolve();
 
-                        if(newType.Module == newModule)
+                        if (newType.Module == newModule)
                         {
                             derivedTypesInModule = true;
 
                             jsonAttribute = new(jsonDerivedTypeAttributeConstructor);
                             jsonAttribute.ConstructorArguments.Add(new(newModule.ImportReference(typeof(Type)), newType));
                             jsonAttribute.ConstructorArguments.Add(new(newModule.ImportReference(typeof(string)), newType.FullName));
-jsonAttributes.Add(jsonAttribute);
+                            jsonAttributes.Add(jsonAttribute);
 
                             xmlAttribute = new(xmlDerivedTypeAttributeConstructor);
                             xmlAttribute.ConstructorArguments.Add(new(newModule.ImportReference(typeof(Type)), newType));
-                           xmlAttributes.Add(xmlAttribute);
+                            xmlAttributes.Add(xmlAttribute);
                         }
                     }
 
-                    if(derivedTypesInModule)
+                    if (derivedTypesInModule)
                     {
                         jsonAttribute = new(jsonDerivedTypeAttributeConstructor);
                         jsonAttribute.ConstructorArguments.Add(new(newModule.ImportReference(typeof(Type)), definition));
@@ -125,7 +146,7 @@ jsonAttributes.Add(jsonAttribute);
 
                         jsonAttributes.Add(jsonAttribute);
 
-                        foreach(CustomAttribute attribute in jsonAttributes)
+                        foreach (CustomAttribute attribute in jsonAttributes)
                         {
                             definition.CustomAttributes.Add(attribute);
                         }

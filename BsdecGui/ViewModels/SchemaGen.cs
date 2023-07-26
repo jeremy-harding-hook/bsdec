@@ -1,4 +1,25 @@
-﻿using Avalonia.Controls;
+﻿//-----------------------------------------------------------------------
+//
+// Copyright 2023 Jeremy Harding Hook
+//
+// This file is part of BsdecGui.
+//
+// BsdecGui is free software: you can redistribute it and/or modify it under
+// the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// BsdecGui is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+// details.
+//
+// You should have received a copy of the GNU General Public License along with
+// BsdecGui. If not, see <https://www.gnu.org/licenses/>.
+//
+//-----------------------------------------------------------------------
+
+using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using BsdecGui.Outsourcing;
@@ -155,7 +176,6 @@ namespace BsdecGui.ViewModels
 
         private void Generator_OnGenerationCompleted(object? sender, EventArgs e)
         {
-            // TODO: pass generator.OutputPath to the loader that the rest of the program uses.
             if (generator!.ExitCode == 0)
             {
                 if (LoadSchema)

@@ -1,5 +1,27 @@
-﻿using System;
+﻿//-----------------------------------------------------------------------
+//
+// Copyright 2023 Jeremy Harding Hook
+//
+// This file is part of BsdecGui.
+//
+// BsdecGui is free software: you can redistribute it and/or modify it under
+// the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// BsdecGui is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+// details.
+//
+// You should have received a copy of the GNU General Public License along with
+// BsdecGui. If not, see <https://www.gnu.org/licenses/>.
+//
+//-----------------------------------------------------------------------
+
+using System;
 using System.Diagnostics;
+using System.IO;
 using System.Text;
 
 namespace BsdecGui.Outsourcing
@@ -12,6 +34,7 @@ namespace BsdecGui.Outsourcing
         public string? ReadMethodName { get; }
         public string? WriteMethodName { get; }
         public int ExitCode { get; private set; }
+        private readonly string schemaGenPath;
 #if RELEASELINUX
         private const string ShippedSchemaGenFilename = "bsdec-schema-gen";
 #else
@@ -25,6 +48,7 @@ namespace BsdecGui.Outsourcing
             TopLevelClassName = topLevelClassName;
             ReadMethodName = readMethodName;
             WriteMethodName = writeMethodName;
+            schemaGenPath = Path.Combine(AppContext.BaseDirectory, ShippedSchemaGenFilename);
         }
         private Process? process;
 
@@ -33,9 +57,10 @@ namespace BsdecGui.Outsourcing
             try
             {
 #if DEBUG
+                Logging.Log.Debug($"In production this would launch {schemaGenPath}, however the path is different in debug mode.");
                 ProcessStartInfo startInfo = new($@"{Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)}\source\repos\Bsdec\bin\Release\win-x64\publish\{ShippedSchemaGenFilename}", BuildArgs())
 #else
-                ProcessStartInfo startInfo = new(ShippedSchemaGenFilename, BuildArgs())
+                ProcessStartInfo startInfo = new(schemaGenPath, BuildArgs())
 #endif
                 {
                     RedirectStandardError = true,
@@ -84,7 +109,7 @@ namespace BsdecGui.Outsourcing
 
         private void Process_Exited(object? sender, EventArgs e)
         {
-            if(ExitCode == 0)
+            if (ExitCode == 0)
             {
                 ExitCode = process?.ExitCode ?? 0;
             }
