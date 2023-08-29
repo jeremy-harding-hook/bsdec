@@ -1,6 +1,7 @@
 ﻿//-----------------------------------------------------------------------
 //
 // Copyright 2023 Jeremy Harding Hook
+// Copyright 2023 Dawid8
 //
 // This file is part of Bsdec.
 //
@@ -112,7 +113,7 @@ namespace Bsdec.Functions
 
             try
             {
-                return Assembly.LoadFile(Path.GetFullPath(filepath));
+                return Assembly.LoadFrom(Path.GetFullPath(filepath));
             }
             catch
             {
